@@ -1,0 +1,35 @@
+{
+  "name": "backend-system-tool-website",
+  "version": "1.0.0",
+  "description": "make the server for tool support student website of caothang technical college",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --watch server.js"
+  },
+  "keywords": [
+    "tool-web",
+    "student-web",
+    "caothang",
+    "dttt"
+  ],
+  "author": "Nhan Huynh",
+  "license": "ISC",
+  "devDependencies": {
+    "bcrypt": "^5.1.1",
+    "compression": "^1.7.4",
+    "dotenv": "^16.4.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "date-fns": "^3.6.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
+    "mongoose": "^8.2.0",
+    "redis": "^3.0.0",
+    "slugify": "^1.6.6"
+  }
+}
