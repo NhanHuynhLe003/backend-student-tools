@@ -83,11 +83,7 @@ let bookSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    book_status: {
-      type: String,
-      enum: ["available", "unavailable"],
-      default: "available",
-    },
+
     book_isDelete: {
       // nếu là true thì sách đã được thêm vào thùng rác
       type: Boolean,
@@ -119,7 +115,7 @@ bookSchema.index({ book_name: "text", book_author: "text" });
 
 //middleware auto create slug from name before create or save
 
-bookSchema.pre("save", function (next) {
+bookSchema.pre("save", function(next) {
   this.book_slug = slugify(this.book_name, { lower: true });
 
   //vd: name: Tôi tài giỏi bạn cũng thế => slug: toi-tai-gioi-ban-cung-the

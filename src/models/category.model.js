@@ -15,6 +15,19 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: "No description",
     },
+    parentCategoryId: {
+      //Danh mục nhiều cấp, có thể ko có nếu cấp 1
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    isPublished: {
+      type: Boolean,
+      default: true,
+    },
+    displayOrder: {
+      type: Number,
+      default: 1,
+    },
   },
   {
     timestamps: true,

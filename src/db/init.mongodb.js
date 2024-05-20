@@ -28,7 +28,7 @@ class Database {
       .connect(connectStr)
       .then(() => console.log("MongoDb connect successfully!"))
       .then(() =>
-        console.log("Ecomerce connected with mongo port: ", connectStr)
+        console.log("Tool Web Student connected with mongo port: ", connectStr)
       )
       .catch((err) => console.log(err));
   }
