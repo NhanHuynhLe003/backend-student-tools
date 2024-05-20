@@ -1,6 +1,8 @@
 const lodash = require("lodash");
 const { default: mongoose } = require("mongoose");
 const { format } = require("date-fns");
+const fs = require("fs");
+const path = require("path");
 
 const convertObjectId = (id) => {
   return new mongoose.Types.ObjectId(id);
@@ -77,6 +79,36 @@ function isObjectEmpty(obj) {
   return Object.keys(obj).length === 0;
 }
 
+/**
+ * @description Hàm xóa tất cả các file trong thư mục
+ * @param {String} pathUrl - Đường dẫn thư mục cần xóa file vd: "src/uploads"
+ */
+function deleteFilesInDirectory(directory) {
+  fs.readdir(directory, (err, files) => {
+    if (err) {
+      console.error(`Error reading directory: ${err.message}`);
+      return;
+    }
+
+    if (!files || files.length === 0) {
+      console.log("Thư mục không có file nào để xóa!");
+      return;
+    }
+
+    // Duyệt qua từng file trong thư mục và xóa
+    for (const file of files) {
+      // fs.unlink: dùng để xóa file
+      fs.unlink(path.join(directory, file), (err) => {
+        if (err) {
+          console.error(`Error deleting file ${file}: ${err.message}`);
+        } else {
+          console.log(`[File:::] ${file} đã được xóa.`);
+        }
+      });
+    }
+  });
+}
+
 module.exports = {
   getDataInfoResponse,
   removeUndefinedNullObject,
@@ -84,4 +116,5 @@ module.exports = {
   convertObjectId,
   convertDateToDDMMYYYY,
   isObjectEmpty,
+  deleteFilesInDirectory,
 };

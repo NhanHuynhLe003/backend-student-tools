@@ -6,16 +6,17 @@ const uploadMemory = multer({
 });
 
 // Cấu hình multer để upload file thông qua ổ đĩa, tốc độ nhanh hơn so với upload thông qua bộ nhớ
-const uploadDisk = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, "./src/uploads/"); // tham số 2 là đường dẫn lưu file
-    },
-    fileName: (req, file, cb) => {
-      cb(null, `${Date.now()} - ${file.originalname}`); // tham số 2 là tên file
-    },
-  }),
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, "./src/uploads/"); // đường dẫn lưu file
+  },
+  filename: function(req, file, cb) {
+    const fileNameSaveServer = `${Date.now()}-${file.originalname}`;
+    console.log("[FILENAME::::::]", fileNameSaveServer);
+    cb(null, fileNameSaveServer); // tên file
+  },
 });
+const uploadDisk = multer({ storage: storage });
 
 module.exports = {
   uploadDisk,

@@ -4,7 +4,10 @@ const helmet = require("helmet");
 const compression = require("compression");
 const app = express();
 const bodyParser = require("body-parser");
-
+const { deleteFilesInDirectory } = require("./utils");
+const cron = require("node-cron");
+const fs = require("fs");
+const path = require("path");
 // Khởi tạo middleware
 app.use(morgan("dev")); //in ra log của user khi chạy request
 app.use(helmet()); // bảo mật ứng dụng
@@ -21,6 +24,23 @@ require("./db/init.mongodb");
 
 // khởi tạo routes
 app.use("/", require("./routes"));
+
+// Hàm dọn rác cron => Xóa ảnh đã upload lên s3 sau 24 giờ(0h0p mỗi ngày)
+cron.schedule("0 0 * * *", () => {
+  //cron.schedule(* * * * * (phút, giờ, ngày trong tháng, tháng, ngày trong tuần))
+  // (45 16 * * *): Chạy vào lúc 16:45 mỗi ngày.
+  // (0 0 * * *): Chạy vào lúc 00:00 mỗi ngày.
+  // (*/5 * * * *): Chạy mỗi 5 phút.
+
+  // directory mặc định sẽ lấy folder trong src nên không cần truyền đường dẫn src
+  const directory = path.join(__dirname, "uploads");
+  try {
+    deleteFilesInDirectory(directory);
+    console.log("Đã xóa tất cả file trong thư mục src/uploads");
+  } catch (err) {
+    console.error(err);
+  }
+});
 
 // xử lý lỗi 404
 app.use((req, res, next) => {
