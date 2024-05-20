@@ -1,6 +1,7 @@
 const { BadRequestError } = require("../../core/error.response");
 const { SuccessResponse } = require("../../core/success.response");
 const UploadService = require("../services/upload.service");
+const { convertObjectId } = require("../utils");
 
 class UploadController {
   /**
@@ -80,6 +81,26 @@ class UploadController {
       message: "Upload danh sách ảnh lên s3 thành công ! ",
       metadata: await UploadService.uploadMultipleDiskImgToS3({
         files,
+        nameStorage: req.query.nameStorage,
+      }),
+    }).send(res);
+  };
+
+  checkAndGetImageS3ById = async (req, res, next) => {
+    const { id } = req.params;
+
+    new SuccessResponse({
+      message: "Lấy ảnh từ s3 thành công !",
+      metadata: await UploadService.checkAndGetImageS3ById({
+        imageId: convertObjectId(id),
+      }),
+    }).send(res);
+  };
+
+  checkAndGetImageS3ByStorage = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách ảnh từ s3 thành công !",
+      metadata: await UploadService.checkAndGetImageS3ByStorage({
         nameStorage: req.query.nameStorage,
       }),
     }).send(res);

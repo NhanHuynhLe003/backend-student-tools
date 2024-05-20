@@ -8,6 +8,18 @@ const { uploadMemory, uploadDisk } = require("../../configs/config.multer");
 //các url bên dưới authentication đều phải xác thực mới được truy cập
 router.use(authentication);
 
+//kiểm tra và lấy image by id
+router.get(
+  "/img/:id",
+  asyncHandleError(UploadController.checkAndGetImageS3ById)
+);
+
+//kiểm tra và lấy image bằng storage
+router.get(
+  "/imgs",
+  asyncHandleError(UploadController.checkAndGetImageS3ByStorage)
+);
+
 //upload img (MEMORY)
 router.post(
   "/img",
@@ -36,4 +48,5 @@ router.post(
   uploadDisk.array("uploadFileKey", 5), // tối đa 5 file
   asyncHandleError(UploadController.uploadMultipleDiskImgToS3)
 );
+
 module.exports = router;
