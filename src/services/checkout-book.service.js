@@ -151,6 +151,13 @@ class CheckoutBookService {
    * @param {String} param.orderId - id của order(objectId)
    */
   static cancelOrderBookByUser = async ({ orderId }) => {
+    const order = await OrderModel.findOne({ _id: orderId });
+    if (order.order_status === "cancel")
+      throw new BadRequestError("Đơn hàng đã bị hủy trước đó");
+
+    if (order.order_status === "done")
+      throw new BadRequestError("Đơn hàng đã được xác nhận không thể hủy");
+
     // trả lại sách vào kho
     const foundOrder = await OrderModel.findById(orderId);
 
@@ -171,8 +178,12 @@ class CheckoutBookService {
         },
       });
     }
-    // hủy đơn hàng
-    return await OrderModel.deleteOne({ _id: orderId });
+
+    // hủy đơn hàng bằng cách cập nhật status, có thể để server tự động xử lý sau mỗi 30 ngày
+    order.order_status = "cancel";
+    await order.save();
+
+    return order;
   };
 }
 

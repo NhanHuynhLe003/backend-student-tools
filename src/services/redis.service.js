@@ -81,6 +81,8 @@ const acquireLock = async (bookId, quantity, cartId) => {
       }
 
       // nếu sản phẩm có sự thay đổi như là quantity sp trong kho < giỏ hàng hay sp đã bị shop xóa thì về null để người dùng order lại
+
+      // Có lẽ chỗ này nên xử lý mấy cái key bị lỗi và kẹt lại làm người sau ko mua được, nhưng mà chưa biết xử lý như nào
       return null;
     } else {
       await new Promise((resolve) => setTimeout(resolve, 50)); //lấy key thất bại delay 50ms rồi thử lại
