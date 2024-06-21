@@ -3,7 +3,6 @@ const BookService = require("../services/book.service");
 
 class BookController {
   createBook = async (req, res, next) => {
-    console.log("ROUTE:::createBook");
     new Created({
       message: "Tạo sách mới thành công",
       metadata: await BookService.createBook(req.body),
@@ -89,35 +88,42 @@ class BookController {
   sortBookByReadView = async (req, res, next) => {
     new SuccessResponse({
       message: "Sắp xếp sách theo lượt đọc thành công",
-      metadata: await BookService.sortBookByReadView({ skip: 0, limit: 50 }),
+      metadata: await BookService.sortBookByReadView({ skip: 0, limit: 20 }),
     }).send(res);
   };
 
   sortBookByFavourite = async (req, res, next) => {
     new SuccessResponse({
       message: "Sắp xếp sách theo lượt yêu thích thành công",
-      metadata: await BookService.sortBookByFavourite({ skip: 0, limit: 50 }),
+      metadata: await BookService.sortBookByFavourite({ skip: 0, limit: 20 }),
     }).send(res);
   };
 
   sortBookByRatings = async (req, res, next) => {
     new SuccessResponse({
       message: "Sắp xếp sách theo lượt đánh giá thành công",
-      metadata: await BookService.sortBookByRatings({ skip: 0, limit: 50 }),
+      metadata: await BookService.sortBookByRatings({ skip: 0, limit: 20 }),
     }).send(res);
   };
 
   sortBookByNewest = async (req, res, next) => {
     new SuccessResponse({
       message: "Sắp xếp sách theo mới nhất thành công",
-      metadata: await BookService.sortBookByNewest({ skip: 0, limit: 50 }),
+      metadata: await BookService.sortBookByNewest({ skip: 0, limit: 20 }),
+    }).send(res);
+  };
+
+  getRecommendBooks = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy sách theo gợi ý thành công",
+      metadata: await BookService.getRecommendBooks(req.query),
     }).send(res);
   };
 
   getAllBookInStock = async (req, res, next) => {
     new SuccessResponse({
       message: "Lấy danh sách các quyển sách còn trong kho thành công",
-      metadata: await BookService.getAllBookInStock({ skip: 0, limit: 50 }),
+      metadata: await BookService.getAllBookInStock({ skip: 0, limit: 20 }),
     }).send(res);
   };
 

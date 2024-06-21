@@ -13,7 +13,7 @@ const {
   ForbiddenError,
 } = require("../../core/error.response");
 const { findStudentByEmailRepo } = require("../models/repos/student.repo");
-const userModel = require("../models/user.model");
+
 const { default: slugify } = require("slugify");
 
 const ROLEBOARD = {
@@ -56,7 +56,6 @@ class AccessService {
       throw new ForbiddenError("Something went wrong !, please login again !");
     }
 
-    console.log("KEYSTORE::::::", keyStore);
     //2. kiểm tra rfToken truyền vào có hợp lệ không
     if (keyStore.refreshToken !== refreshToken) {
       throw new AuthFailureError("Invalid Token");
@@ -132,7 +131,6 @@ class AccessService {
    * 5. Lưu thông tin về khóa vào cơ sở dữ liệu.
    * 6. Trả về thông tin Student và cặp tokens cho người dùng.
    */
-
   static login = async ({ email, password, refreshToken = null }) => {
     //1. check student bằng mail
     const studentFound = await findStudentByEmailRepo({ email });
@@ -192,7 +190,13 @@ class AccessService {
    * 5. generate token pair to make new session
    * 6. get data info response
    */
-  static signUp = async ({ studentId, name, email, password }) => {
+  static signUp = async ({
+    studentId,
+    name,
+    email,
+    password,
+    classStudent,
+  }) => {
     //1. check student existed
     const studentExisted = await studentModel
       .findOne({ email, studentId })
@@ -209,22 +213,12 @@ class AccessService {
 
     // Update user info vào dbs
     const newStudent = await studentModel.create({
+      classStudent: classStudent,
       student_id: studentId,
       name: name,
       email,
       password: passwordHashed,
       roles: [ROLEBOARD.USER],
-    });
-
-    // Thêm user đã tạo vào bảng quản lý user
-    const newUser = await userModel.create({
-      usr_id: studentId,
-      usr_slug: slugify(name, { lower: true }),
-      usr_name: name,
-      usr_email: email,
-      usr_password: passwordHashed,
-      usr_role: convertObjectId("6631f8a2a53c615de5cc1111"), // tạo tạm objectId do chưa phân quyền nên 1111 là quyền user
-      usr_student_detail: convertObjectId(newStudent._id), // chuyển id student thành objectId
     });
 
     if (newStudent) {

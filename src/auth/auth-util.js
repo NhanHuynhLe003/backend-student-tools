@@ -71,7 +71,7 @@ const createTokenPair = async (payload, privateKey, publicKey) => {
  * @throws {AuthFailureError} Nếu refreshToken không hợp lệ hoặc không khớp với UserId.
  * @returns {Function} - Hàm callback next để tiếp tục xử lý các yêu cầu tiếp theo.
  *
- * Đặc điểm:
+ * Bước thực hiện:
  * - Kiểm tra và lấy userId từ tiêu đề yêu cầu.
  * - Tìm kiếm keyToken trong cơ sở dữ liệu dựa trên userId.
  * - Kiểm tra và giải mã refreshToken, sau đó gán thông tin keyToken vào đối tượng yêu cầu.
@@ -90,13 +90,13 @@ const authentication = asyncHandleError(async (req, res, next) => {
   if (req.headers[HEADER.REFRESHTOKEN]) {
     try {
       const rfToken = req.headers[HEADER.REFRESHTOKEN];
-      // console.log("KEYSTORE12345::::::: ", keyStore.privateKey);
+
       const decodeUser = JWT.verify(rfToken, keyStore.privateKey);
       if (userId !== decodeUser.userId) {
         throw new AuthFailureError("Invalid UserId");
       }
 
-      console.log("DECODE USER::: ", decodeUser);
+      // Gán thông tin keyStore, user, refreshToken vào request để sử dụng
       req.keyStore = keyStore;
       req.user = decodeUser;
       req.refreshToken = rfToken;

@@ -15,6 +15,8 @@ router.get(
 
 router.get("/publishs", asyncHandleError(BookController.findPublishBook));
 
+router.get("/recommends", asyncHandleError(BookController.getRecommendBooks));
+
 router.get(
   "/publish/:id",
   asyncHandleError(BookController.findBookPublishDetail)

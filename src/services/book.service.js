@@ -21,6 +21,8 @@ const {
   sortBookByNewest,
   getAllBookInStock,
 } = require("../models/repos/book");
+
+const NotificationService = require("./notification.service");
 const TrashModel = require("../models/trash.model");
 const {
   removeUndefinedNullObject,
@@ -87,7 +89,31 @@ class BookService {
       isPublished,
     });
 
+    //Trong tương lai receiverId sẽ dùng message queue để phân phối (PUSH)
+    NotificationService.pushNotification({
+      noti_type: "NEW_BOOK",
+      noti_senderId: "6634579513ecc5a78b385123",
+      noti_receiverId: "6634579513ecc5a78b385abc",
+      noti_content: `New book ${book_name} has been added to the library`,
+      noti_options: {
+        book_id: newBook._id,
+      },
+    });
     return newBook;
+  };
+
+  static getRecommendBooks = async ({ skip = 0, limit = 20 }) => {
+    const response = await bookModel
+      .find({})
+      .sort({
+        book_ratingsAverage: -1,
+        book_favourites: -1,
+        book_num_readed: -1,
+      })
+      .skip(skip)
+      .limit(limit);
+
+    return response;
   };
 
   static findBookDraftDetail = async ({ id }) => {

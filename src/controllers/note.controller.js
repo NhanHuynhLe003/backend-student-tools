@@ -1,13 +1,12 @@
 "use strict";
 
 const NoteService = require("../services/note.service");
-const { SuccessResponse } = require("../../core/success.response");
-
+const { Created } = require("../../core/success.response");
 class NoteController {
-  sayHello = async (req, res, next) => {
-    new SuccessResponse({
-      message: "Say Hello !",
-      metadata: await NoteService.sayHello({ dataInfo: req.body.payload }),
+  createNote = async (req, res, next) => {
+    new Created({
+      message: "Tạo Sách Mới Thành Công",
+      metadata: await NoteService.createNote(req.body),
     }).send(res);
   };
 }

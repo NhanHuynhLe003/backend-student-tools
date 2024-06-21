@@ -10,7 +10,7 @@ var shopSchema = new mongoose.Schema(
       required: true,
       unique: true, // Mã sinh viên là duy nhất vd: 0308211150
     },
-    class: { type: String, required: true },
+    classStudent: { type: String, required: true },
     name: {
       type: String,
       trim: true,
@@ -58,16 +58,16 @@ var shopSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "inactive",
     },
-    // Yêu cầu xác thực đối với các phương thức lấy lại mật khẩu
+    // Yêu cầu xác thực đối với các phương thức lấy lại mật khẩu, Đổi mật khẩu, ...
     verify: {
       type: mongoose.Schema.Types.Boolean,
       default: false,
     },
 
-    // Student sẽ được cấp những quyền gì: user hay admin, sau này sẽ được bản role quản lý
+    // Student sẽ được cấp những quyền gì: Writer, Reader
     roles: {
       type: Array,
-      default: [],
+      default: ["STUDENT"],
     },
   },
   {
