@@ -80,11 +80,12 @@ const createTokenPair = async (payload, privateKey, publicKey) => {
 const authentication = asyncHandleError(async (req, res, next) => {
   // 1. kiểm tra userId từ header
   const userId = req.headers[HEADER.CLIENT_ID];
-  if (!userId) throw new BadRequestError("Missing UserId");
+  if (!userId) throw new BadRequestError("Vui lòng đăng nhập"); //Missing userId
 
   // 2. kiểm tra keyToken trong db bằng userId
   const keyStore = await findKeyTokenByUserId(userId);
-  if (!keyStore) throw new NotFoundError("Not Found UserId");
+  if (!keyStore)
+    throw new NotFoundError("Không tìm thấy thông tin, vui lòng đăng nhập lại"); //Not Found UserId
 
   //3. kiểm tra refreshToken
   if (req.headers[HEADER.REFRESHTOKEN]) {

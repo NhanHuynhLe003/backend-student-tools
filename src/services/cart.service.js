@@ -71,7 +71,7 @@ class CartService {
 
     //3.1 kiểm tra xem sp đã có trong cart chưa, nếu có thì tăng số lượng sp trong giỏ hàng
     const isProductExist = userCart.cart_books.some(
-      (item) => item.bookId.toString() === book.bookId.toString()
+      (item) => item.bookId?.toString() === book.bookId?.toString()
     );
 
     if (isProductExist) {
@@ -91,7 +91,6 @@ class CartService {
     };
 
     //2. kiểm tra xem sp đã có trong cart chưa, nếu có thì xóa sp trong giỏ hàng
-    console.log("[BOOKID::]", bookId);
     const updatePayload = {
       $pull: {
         cart_books: { bookId: bookId },

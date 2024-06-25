@@ -2,33 +2,54 @@ const { default: mongoose } = require("mongoose");
 const CategoryModel = require("../../category.model");
 const { Types } = require("mongoose");
 const bookModel = require("../../book.model");
+const { NotFoundError } = require("../../../../core/error.response");
 const getAllCategories = async () => {
-  return await CategoryModel.find().lean().exec();
+  return await CategoryModel.find()
+    .lean()
+    .exec();
 };
 
-const findCateById = async (id) => {
-  const res = await CategoryModel.findById(id).lean().exec();
-  console.log("RES:::::::", res);
+const getCategoriesPublished = async () => {
+  return await CategoryModel.find({ isPublished: true })
+    .lean()
+    .exec();
+};
+
+const findCatePublishedById = async (id) => {
+  const res = await CategoryModel.find({
+    _id: Types.ObjectId(id),
+    isPublished: true,
+  })
+    .lean()
+    .exec();
+
   return res;
 };
 
-const createCate = async ({ cate_name, cate_desc }) => {
+const createCate = async ({ cate_name, cate_desc, isPublished }) => {
   return await CategoryModel.create({
     name: cate_name,
     description: cate_desc,
+    isPublished,
   });
 };
 
 const deleteCate = async ({ id }) => {
   //xóa id trong mảng của các quyển sách có id đó
-  await bookModel.updateMany(
-    {
-      book_genre: {
-        $in: [Types.ObjectId(id)],
-      } /*nếu id nằm trong mảng categories*/,
-    },
-    { $pull: { book_genre: Types.ObjectId(id) } /** Lấy id nó ra khỏi mảng */ }
-  );
-  return await CategoryModel.findByIdAndDelete(id).lean().exec();
+
+  const categoryFound = await CategoryModel.findById(id);
+  if (!categoryFound) throw new NotFoundError("Không tìm thấy thể loại");
+
+  //Ẩn thể loại này đi
+  categoryFound.isPublished = false;
+  await categoryFound.save();
+
+  return categoryFound;
 };
-module.exports = { getAllCategories, findCateById, createCate, deleteCate };
+module.exports = {
+  getCategoriesPublished,
+  getAllCategories,
+  findCatePublishedById,
+  createCate,
+  deleteCate,
+};

@@ -17,9 +17,8 @@ const NotificationSchema = new mongoose.Schema(
       ref: "User",
     },
     noti_receiverId: {
-      //Thường là id của USER, ta có thể PROMISE.ALL lấy những USER Online hiện tại sau đó dùng RabbitMQ để gửi thông báo, hoặc lưu vào DB để lấy thông báo khi USER đăng nhập
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
+      default: null,
       ref: "User",
     },
     noti_content: {

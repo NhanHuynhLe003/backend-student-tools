@@ -32,6 +32,7 @@ const {
 } = require("../utils");
 class BookService {
   static createBook = async ({
+    userId,
     book_name,
     book_author,
     book_thumb,
@@ -89,14 +90,13 @@ class BookService {
       isPublished,
     });
 
-    //Trong tương lai receiverId sẽ dùng message queue để phân phối (PUSH)
-    NotificationService.pushNotification({
+    await NotificationService.pushNotification({
       noti_type: "NEW_BOOK",
-      noti_senderId: "6634579513ecc5a78b385123",
-      noti_receiverId: "6634579513ecc5a78b385abc",
+      noti_senderId: userId,
       noti_content: `New book ${book_name} has been added to the library`,
       noti_options: {
         book_id: newBook._id,
+        book_name: newBook.book_name,
       },
     });
     return newBook;

@@ -6,7 +6,7 @@ const COLLECTION_NAME = "Carts";
 
 const cartSchema = new mongoose.Schema(
   {
-    cart_userId: { type: String, required: true }, // giỏ hàng của học sinh
+    cart_userId: { type: mongoose.Schema.Types.ObjectId, required: true }, // giỏ hàng của học sinh, lấy thẳng id học sinh
     cart_state: {
       type: String,
       enum: ["active", "completed", "cancelled", "pending"],

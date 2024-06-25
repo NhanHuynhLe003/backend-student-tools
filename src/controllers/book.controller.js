@@ -5,7 +5,10 @@ class BookController {
   createBook = async (req, res, next) => {
     new Created({
       message: "Tạo sách mới thành công",
-      metadata: await BookService.createBook(req.body),
+      metadata: await BookService.createBook({
+        ...req.body,
+        userId: req.user.userId,
+      }),
     }).send(res);
   };
 

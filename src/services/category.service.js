@@ -1,22 +1,25 @@
 const {
   getAllCategories,
-  findCateById,
+  findCatePublishedById,
   createCate,
   deleteCate,
+  getCategoriesPublished,
 } = require("../models/repos/category");
 
 class CategoryService {
+  static async getCategoriesPublished() {
+    return await getCategoriesPublished();
+  }
   static async getAllCategories() {
     return await getAllCategories();
   }
 
-  static async findCateById({ id }) {
-    console.log("ID CATE: ", id);
-    return await findCateById(id);
+  static async findCatePublishedById({ id }) {
+    return await findCatePublishedById(id);
   }
 
-  static async createCategory({ cate_name, cate_desc }) {
-    return await createCate({ cate_name, cate_desc });
+  static async createCategory({ cate_name, cate_desc, isPublished = true }) {
+    return await createCate({ cate_name, cate_desc, isPublished });
   }
 
   static async deleteCategory({ id }) {

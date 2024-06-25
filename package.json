@@ -4,7 +4,7 @@
   "description": "make the server for tool support student website of caothang technical college",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "node --watch server.js"
   },
   "keywords": [
@@ -20,6 +20,7 @@
     "compression": "^1.7.4",
     "dotenv": "^16.4.5",
     "helmet": "^7.1.0",
+    "jest": "^29.7.0",
     "morgan": "^1.10.0"
   },
   "dependencies": {

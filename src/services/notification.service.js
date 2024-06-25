@@ -2,6 +2,7 @@
 
 const NotificationModel = require("../models/notification.model");
 
+const QUEUE_NAME = process.env.MESSAGE_QUEUE_NAME || "NOTIFICATION_QUEUE";
 class NotificationService {
   static async pushNotification({
     noti_type,
@@ -36,14 +37,16 @@ class NotificationService {
         message = noti_content;
     }
 
-    const newNotification = await NotificationModel.create({
+    const data = {
       noti_type: noti_type,
-      noti_senderId: noti_senderId,
+      noti_senderId: noti_senderId, //nếu Admin gửi user thì có thể chỗ này là null
       noti_receiverId: noti_receiverId,
       noti_content: message,
       noti_options: noti_options,
       noti_status: noti_status,
-    });
+    };
+
+    const newNotification = await NotificationModel.create(data);
 
     return newNotification;
   }

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { default: slugify } = require("slugify");
 
 // category.model.js
 const DOCUMENT_NAME = "Category";
@@ -14,6 +15,9 @@ const categorySchema = new mongoose.Schema(
     description: {
       type: String,
       default: "No description",
+    },
+    tag: {
+      type: String,
     },
     parentCategoryId: {
       //Danh mục nhiều cấp, có thể ko có nếu cấp 1
@@ -34,6 +38,12 @@ const categorySchema = new mongoose.Schema(
     collection: COLLECTION_NAME,
   }
 );
+
+categorySchema.index({ name: "text" });
+categorySchema.pre("save", function(next) {
+  this.tag = slugify(this.name, { lower: true });
+  next();
+});
 
 const CategoryModel = mongoose.model(DOCUMENT_NAME, categorySchema);
 
