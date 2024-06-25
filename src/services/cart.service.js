@@ -96,6 +96,7 @@ class CartService {
         cart_books: { bookId: bookId },
       },
     };
+
     //3. new: true trả về dữ liệu mới sau khi update
     const options = { new: true };
     return await CartModel.findOneAndUpdate(query, updatePayload, options);

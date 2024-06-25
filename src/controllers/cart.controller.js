@@ -37,6 +37,13 @@ class CartController {
       }),
     }).send(res);
   };
+
+  updateBookQuantityInCart = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Cập nhật số lượng sách trong giỏ hàng thành công",
+      metadata: await CartService.updateUserCartQuantity(req.body),
+    }).send(res);
+  };
 }
 
 module.exports = new CartController();
