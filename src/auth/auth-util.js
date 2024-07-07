@@ -43,6 +43,7 @@ const createTokenPair = async (payload, privateKey, publicKey) => {
       expiresIn: "7 days",
     });
 
+    // Kiểm tra accessToken xem có hợp lệ không, nếu như hết hạn hoặc không hợp lệ thì sẽ không decode được
     JWT.verify(accessToken, publicKey, (err, decode) => {
       if (err) {
         console.log("failed to verify token:: ", err);
@@ -85,26 +86,31 @@ const authentication = asyncHandleError(async (req, res, next) => {
   // 2. kiểm tra keyToken trong db bằng userId
   const keyStore = await findKeyTokenByUserId(userId);
   if (!keyStore)
-    throw new NotFoundError("Không tìm thấy thông tin, vui lòng đăng nhập lại"); //Not Found UserId
+    throw new AuthFailureError(
+      "Không tìm thấy thông tin, vui lòng đăng nhập lại"
+    ); //Not Found UserId
 
   //3. kiểm tra refreshToken
   if (req.headers[HEADER.REFRESHTOKEN]) {
+    const rfToken = req.headers[HEADER.REFRESHTOKEN];
+    let decodeUser = {};
     try {
-      const rfToken = req.headers[HEADER.REFRESHTOKEN];
-
-      const decodeUser = JWT.verify(rfToken, keyStore.privateKey);
-      if (userId !== decodeUser.userId) {
-        throw new AuthFailureError("Invalid UserId");
-      }
-
-      // Gán thông tin keyStore, user, refreshToken vào request để sử dụng
-      req.keyStore = keyStore;
-      req.user = decodeUser;
-      req.refreshToken = rfToken;
-      return next();
-    } catch (error) {
-      throw new Error(error);
+      //Refresh token được ký bằng privateKey do đó sử dụng privateKey để giải mã
+      decodeUser = JWT.verify(rfToken, keyStore.privateKey);
+    } catch (err) {
+      throw new AuthFailureError(
+        "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại"
+      );
     }
+    if (userId !== decodeUser.userId) {
+      throw new AuthFailureError("Invalid UserId");
+    }
+
+    // Gán thông tin keyStore, user, refreshToken vào request để sử dụng
+    req.keyStore = keyStore;
+    req.user = decodeUser;
+    req.refreshToken = rfToken;
+    return next();
   }
 });
 

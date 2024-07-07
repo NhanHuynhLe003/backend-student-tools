@@ -17,6 +17,12 @@ let bookSchema = new mongoose.Schema(
       type: String,
       default: "Chưa có thông tin về tác giả cuốn sách này",
     },
+    book_thumb_id: {
+      // ID dùng để lấy signed ảnh mới sau khi đã hết hạn
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Image",
+      required: true,
+    },
     book_thumb: {
       // ảnh cuốn sách, là String là do lấy link ảnh từ internet về
       type: String,

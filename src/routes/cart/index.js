@@ -10,6 +10,7 @@ router.post(
   "/quantity",
   asyncHandleError(CartController.updateBookQuantityInCart)
 );
+router.post("/empty", asyncHandleError(CartController.createEmptyCart));
 router.post("/add", asyncHandleError(CartController.addBookToCart));
 router.get("/:id", asyncHandleError(CartController.getListBookInCart));
 router.post("", asyncHandleError(CartController.createCart));

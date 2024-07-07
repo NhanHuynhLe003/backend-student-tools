@@ -163,7 +163,11 @@ class AccessService {
     });
 
     return {
-      student: getDataInfoResponse(["_id", "name", "email"], studentFound),
+      //Sử dụng lodash để lấy các field trả về cần thiết cho student và gắn vào request ở client
+      student: getDataInfoResponse(
+        ["_id", "name", "email", "classStudent"],
+        studentFound
+      ),
       tokens: tokensLogin,
     };
   };

@@ -14,28 +14,27 @@ const noteSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    //Ghi chú dạng note "ABCD [1]123 , EFG [2]456, HIJ [3]789"
     note_content: {
       type: String,
       required: true,
     },
-    // Ghi chú dạng {}
+    // Ghi chú dạng note "ABCD [1]....... , EFG [2].........., HIJ [3].........."
     note_cloze: {
       type: String,
       default: "",
     },
-    // Các Cloze bên trong
+    // Các Cloze bên trong, ["123", "456", "789"]
     clozes: {
-      type: [
-        {
-          index: Number,
-          content: String,
-        },
-      ],
+      type: [String],
       default: [],
+    },
+    isDelete: {
+      type: Boolean,
+      default: false,
     },
     note_level: {
       /**
-        -1: 0
          0: 1p
          1: 1 ngày
          2: 3 ngày
@@ -49,11 +48,14 @@ const noteSchema = new mongoose.Schema(
          10: 2 năm
          */
       type: Number,
-      default: -1,
+      default: 1,
     },
     due_date: {
       type: Date,
       default: Date.now,
+    },
+    note_parentId: {
+      type: mongoose.Schema.Types.ObjectId,
     },
   },
   {

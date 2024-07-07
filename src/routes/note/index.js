@@ -7,7 +7,18 @@ const { authentication } = require("../../auth/auth-util");
 
 //các url bên dưới authentication đều phải xác thực mới được truy cập
 router.use(authentication);
-router.post("/create", asyncHandleError(NoteController.createNote));
+
+router.post(
+  "/create/origin",
+  asyncHandleError(NoteController.createOriginNote)
+);
+router.get("/today", asyncHandleError(NoteController.layNhungNoteOntapHomNay));
+router.post("/add", asyncHandleError(NoteController.addChildNote));
+router.get("/name", asyncHandleError(NoteController.getNoteByName));
+router.post("/level", asyncHandleError(NoteController.updateNoteLevel));
+router.get("/:id", asyncHandleError(NoteController.getNoteById));
+router.put("/:id", asyncHandleError(NoteController.updateNote));
+router.get("/", asyncHandleError(NoteController.getAllNotesByUser));
 
 //GET, POST, PUT, PATCH, DELETE ->
 //create book

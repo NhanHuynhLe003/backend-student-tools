@@ -5,13 +5,22 @@ const NoteModel = require("../models/note.model");
 const { removeUndefinedNullObject, nestedObjectConvert } = require("../utils");
 
 class NoteService {
-  //Tạo mới note
-  static createNote = async ({
+  static findNoteInTrash = async ({ note_userId }) => {
+    const noteFound = await NoteModel.find({
+      note_userId: note_userId,
+      isDelete: true,
+    });
+
+    return noteFound;
+  };
+
+  static createOriginNote = async ({
     note_userId,
     note_title,
     note_content,
     note_cloze,
     note_level,
+    clozes = [],
   }) => {
     const newNote = await NoteModel.create({
       note_userId: note_userId,
@@ -19,12 +28,36 @@ class NoteService {
       note_content: note_content,
       note_cloze: note_cloze,
       note_level: note_level,
+      clozes: clozes,
     });
 
     return newNote;
   };
 
-  //Hàm lấy ra note thông qua id
+  //Tạo mới note
+  static addChildNote = async ({
+    note_userId,
+    note_title,
+    note_content,
+    note_cloze,
+    note_level,
+    note_parentId,
+    clozes = [],
+  }) => {
+    const newNote = await NoteModel.create({
+      note_parentId: note_parentId,
+      note_userId: note_userId,
+      note_title: note_title,
+      note_content: note_content,
+      note_cloze: note_cloze,
+      note_level: note_level,
+      clozes: clozes,
+    });
+
+    return newNote;
+  };
+
+  //Hàm lấy ra note thông qua id, chi tiết note
   static getNoteById = async ({ note_userId, id }) => {
     //Tìm Note bằng ObjectID
     const noteFound = await NoteModel.findOne({
@@ -51,7 +84,7 @@ class NoteService {
     return checkNoteUser;
   };
 
-  // Hàm lấy ra các note thông qua title
+  // Hàm lấy ra các note thông qua title, dùng để search
   static getNoteByName = async ({ note_userId, note_title }) => {
     const noteFound = await NoteModel.findOne({
       note_userId: note_userId,
@@ -77,7 +110,6 @@ class NoteService {
   static deleteNote = async ({ note_userId, id }) => {
     const noteFound = await NoteModel.findOne({
       note_userId: note_userId,
-      _id: id,
     });
 
     if (!noteFound) {
@@ -129,15 +161,24 @@ class NoteService {
     }
 
     noteFound.note_level = note_level;
+    //update note due_date
+    noteFound.due_date = calculateDueDate(note_level);
+
     noteFound.save(); //Cập nhật lại dữ liệu note
   }
 
-  // Hàm lấy các note cần ôn tập của ngày hôm đó
-  static getNotesForToday = async ({ note_userId }) => {
+  // Hàm lấy các note cần ôn tập của ngày hôm đó, bằng cách lấy ra các note ít hơn hoặc bằng ngày hiện tại
+  static layNhungNoteOntapHomNay = async ({ note_userId, note_parentId }) => {
     const today = new Date();
+
+    console.log("today: ", today);
+
     const notesFound = await NoteModel.find({
-      note_userId,
-      due_date: { $lte: today },
+      note_userId: note_userId,
+
+      note_parentId: note_parentId,
+      due_date: { $lte: today }, // So sánh chỉ phần ngày
+      isDelete: false,
     });
 
     if (!notesFound || notesFound.length === 0) {
@@ -200,23 +241,11 @@ class NoteService {
 
     noteFound.note_level = note_level;
     noteFound.due_date = calculateDueDate(note_level);
+
+    // Trả về ngày tiếp theo cho client
     await noteFound.save();
 
     return noteFound;
-  }
-
-  // Hàm trích xuất các cloze từ note_content ABCD[1::1234]12345
-  static extractClozes(note_content) {
-    const clozePattern = /\[(\d+)::([^\]]+)\]/g;
-    const clozes = [];
-    let match;
-    //Duyệt qua từng cloze trong note_content và lấy ra các cloze thỏa yêu cầu
-    while ((match = clozePattern.exec(note_content)) !== null) {
-      clozes.push({
-        index: clozes.length,
-        content: match[1],
-      });
-    }
   }
 
   // Hàm tính toán due_date dựa trên level
@@ -224,9 +253,6 @@ class NoteService {
     const today = new Date();
     let dueDate = new Date(today);
     switch (level) {
-      case -1:
-        dueDate = today;
-        break;
       case 0:
         dueDate.setMinutes(today.getMinutes() + 1);
         break;

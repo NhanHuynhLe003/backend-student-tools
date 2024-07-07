@@ -1,4 +1,5 @@
 const { BadRequestError, NotFoundError } = require("../../core/error.response");
+const { bookModel } = require("../models/book.model");
 const CartModel = require("../models/cart.model");
 const {
   createNewCart,
@@ -21,8 +22,43 @@ class CartService {
     return await createNewCart({ query, updatePayload, option });
   };
 
+  static createEmptyCart = async ({ userId }) => {
+    const query = { cart_userId: userId, cart_state: "active" };
+
+    const foundCart = await CartModel.findOne(query);
+
+    //Nếu tìm thấy cart thì trả về cart đó, còn nếu chưa tạo cart thì tạo mới cart rỗng
+    if (foundCart) return foundCart;
+
+    const updatePayload = {
+      $set: { cart_books: [] },
+    };
+    const option = {
+      upsert: true, // nếu không tìm thấy thì tạo mới cart
+      new: true, // trả về dữ liệu mới sau khi update
+    };
+    return await createNewCart({ query, updatePayload, option });
+  };
+
   static async updateUserCartQuantity({ userId, book }) {
     const { bookId, quantity } = book;
+
+    const foundBook = await bookModel.findOne({
+      _id: bookId,
+    });
+
+    const foundCart = await CartModel.findOne({
+      cart_userId: userId,
+      cart_state: "active",
+    });
+    const currentBookInCart = foundCart.cart_books.find(
+      (book) => book.bookId.toString() === bookId.toString()
+    );
+
+    if (!foundBook)
+      throw new NotFoundError("Không tìm thấy sách trong hệ thống !");
+    if (foundBook.book_quantity < currentBookInCart.quantity + quantity)
+      throw new BadRequestError("Số lượng sách trong kho không đủ !");
 
     if (!checkValidQuantityBookInCart({ userId, bookId, quantity }))
       throw new BadRequestError("Sản phẩm trong giỏ hàng không hợp lệ !");
@@ -53,6 +89,8 @@ class CartService {
    */
   static addBookToCart = async ({ userId, book = {} }) => {
     //1. kiểm tra xem user đã có cart chưa
+
+    const { bookId, quantity } = book;
     const userCart = await CartModel.findOne({
       cart_userId: userId,
       cart_state: "active",
@@ -61,6 +99,17 @@ class CartService {
       //when user cart is not created
       return await this.createCart({ userId, book });
     }
+
+    //1.1 Nếu sản phẩm trong kho đã hết thì không thêm vào giỏ hàng
+    const foundBook = await bookModel.findOne({
+      _id: bookId,
+    });
+    if (!foundBook)
+      throw new NotFoundError("Không tìm thấy sách trong hệ thống !");
+    if (foundBook.book_quantity === 0)
+      throw new BadRequestError(
+        "Quyển sách này đã hết, vui lòng chọn sách khác!"
+      );
 
     //2. Trường hợp Cart đã tạo ra mà chưa có sp, hoặc sp trong cart đã bị xóa hết còn mảng rỗng
     if (userCart.cart_books.length === 0) {
@@ -80,6 +129,7 @@ class CartService {
 
     //3.2 nếu sp chưa có trong cart thì thêm mới vào cart
     userCart.cart_books.push(book);
+
     return await userCart.save();
   };
 
@@ -106,7 +156,12 @@ class CartService {
     console.log({ userId, skip, limit });
     const res = await getListBookInCart({ userId, skip, limit });
 
-    return res.cart_books;
+    // Trường hợp mới vào chưa có cart thì trả về mảng rỗng, ko phải là null
+    return res ? res.cart_books : [];
+  };
+
+  static checkBookExistInStudentBookshelf = async ({ userId, bookId }) => {
+    //Nếu có thì trả về true, còn không thì trả về false
   };
 }
 

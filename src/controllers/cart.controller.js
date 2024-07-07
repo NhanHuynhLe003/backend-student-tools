@@ -44,6 +44,13 @@ class CartController {
       metadata: await CartService.updateUserCartQuantity(req.body),
     }).send(res);
   };
+
+  createEmptyCart = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Tạo giỏ hàng rỗng thành công",
+      metadata: await CartService.createEmptyCart(req.body),
+    }).send(res);
+  };
 }
 
 module.exports = new CartController();

@@ -9,6 +9,7 @@ const cron = require("node-cron");
 const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
+const axios = require("axios");
 
 //CORS chỉ cho phép nguồn sau truy cập vào BE
 const allowedOrigins = ["http://localhost:3000"];
@@ -47,7 +48,7 @@ require("./db/init.mongodb");
 // khởi tạo routes
 app.use("/", require("./routes"));
 
-// Hàm dọn rác cron => Xóa ảnh đã upload lên s3 sau 24 giờ(0h0p mỗi ngày)
+// Hàm dọn rác cron => Xóa ảnh đã upload sau mỗi 12h
 cron.schedule("0 0 * * *", () => {
   //cron.schedule(* * * * * (phút, giờ, ngày trong tháng, tháng, ngày trong tuần))
   // (45 16 * * *): Chạy vào lúc 16:45 mỗi ngày.
@@ -73,6 +74,7 @@ app.use((req, res, next) => {
 
 // xử lý các lỗi khác, nếu không có thì trả về lỗi server(500)
 app.use((error, req, res, next) => {
+  // console.error("ERROR MIDDLWARE", error);
   const statusRes = error.status || 500;
   return res.status(statusRes).json({
     status: "error",

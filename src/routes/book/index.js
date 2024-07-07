@@ -41,6 +41,10 @@ router.get("/filter", asyncHandleError(BookController.mergeFilterBook));
 router.use(authentication);
 
 router.post("", asyncHandleError(BookController.createBook));
+router.post(
+  "/book-shelf/:userId",
+  asyncHandleError(BookController.getBooksInStudentBookshelf)
+);
 router.patch("/:id", asyncHandleError(BookController.updateBookById));
 router.delete("/:id", asyncHandleError(BookController.deleteBookById));
 router.get("/draft/:id", asyncHandleError(BookController.findBookDraftDetail));

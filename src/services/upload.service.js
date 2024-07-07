@@ -26,11 +26,10 @@ class UploadService {
   static async uploadSingleImgToS3({ file, nameStorage = "books" }) {
     //tạo tên folder ngày hiện tại upload ảnh
     const convertDDMMYYYY = format(new Date(), "dd-MM-yyyy");
-    const convertHHMMSS = format(new Date(), "HHmmss");
     //Thời gian để ảnh hết hạn
     const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000); // url img hết hạn sau 24h mỗi ngày
 
-    const imgName = `${nameStorage}/${convertDDMMYYYY}/${convertHHMMSS}-${file.originalname}`;
+    const imgName = `${nameStorage}/${convertDDMMYYYY}/${file.originalname}`;
 
     //(*) lưu tên file ảnh vào database của BOOKS
 
@@ -69,11 +68,10 @@ class UploadService {
   static async uploadSingleDiskImgToS3({ file, nameStorage = "books" }) {
     // Tạo tên folder ngày hiện tại upload ảnh
     const convertDDMMYYYY = format(new Date(), "dd-MM-yyyy");
-    const convertHHMMSS = format(new Date(), "HHmmss");
     // Thời gian để ảnh hết hạn
-    const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000); // url img hết hạn sau 24h mỗi ngày
+    const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000); // url img hết hạn sau 24h mỗi ngày tính từ thời hạn cuối của ảnh
 
-    const imgName = `${nameStorage}/${convertDDMMYYYY}/${convertHHMMSS}-${file.originalname}`;
+    const imgName = `${nameStorage}/${convertDDMMYYYY}/${file.originalname}`;
 
     // Đọc file từ disk
     const filePath = path.join(__dirname, "..", "uploads", file.filename);
@@ -102,24 +100,24 @@ class UploadService {
     // Xóa file sau khi upload xong để dọn dẹp
     // fs.unlinkSync(filePath);
 
-    //(*) lưu tên file ảnh vào mongodb => để sau này tiện lấy ảnh
+    //(*) lưu file ảnh vào mongodb => Mục đích: dùng để get ảnh khi ảnh hết hạn
     const image = new ImageModel({
       keyName: imgName,
       signedUrl: urlSignedCloudFront,
       expiration: expiredTimeUrlImg,
       storage: nameStorage,
     });
-    await image.save();
+    const resImageDb = await image.save();
 
     return {
       url: urlSignedCloudFront, // trả về thông tin ảnh, trong đó có url truy cập ảnh
+      imageInfo: resImageDb, // Chủ yếu để lấy id ảnh gắn qua cho book
       result,
     };
   }
 
   static async uploadMultipleImgToS3({ files, nameStorage = "books" }) {
     const convertDDMMYYYY = format(new Date(), "dd-MM-yyyy");
-    const convertHHMMSS = format(new Date(), "HHmmss");
     //Thời gian để ảnh hết hạn sau 24h
     const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -129,9 +127,12 @@ class UploadService {
     // mảng chứa url ảnh đã upload
     const urls = [];
 
+    // mảng chứa thông tin ảnh đã upload trong db
+    const images = [];
+
     // duyệt qua từng file ảnh để upload
     for (let i = 0; i < files.length; i++) {
-      const imgName = `${nameStorage}/${convertDDMMYYYY}/${convertHHMMSS}-${files[i].originalname}`;
+      const imgName = `${nameStorage}/${convertDDMMYYYY}/${files[i].originalname}`;
       const command = new PutObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
         Key: imgName,
@@ -151,6 +152,15 @@ class UploadService {
         privateKey: process.env.CLOUDFRONT_PRIVATEKEY,
       });
 
+      //(*) lưu file ảnh vào mongodb => Mục đích: dùng để get ảnh khi ảnh hết hạn
+      const image = new ImageModel({
+        keyName: imgName,
+        signedUrl: urlSignedCloudFront,
+        expiration: expiredTimeUrlImg,
+        storage: nameStorage,
+      });
+      const resImageDb = await image.save();
+      images.push(resImageDb);
       // url ảnh và thông tin của ảnh đã upload sẽ được lưu vào mảng urls
       urls.push(urlSignedCloudFront);
       result.push(res);
@@ -158,12 +168,12 @@ class UploadService {
     return {
       urls,
       result,
+      images,
     };
   }
 
   static async uploadMultipleDiskImgToS3({ files, nameStorage = "books" }) {
     const convertDDMMYYYY = format(new Date(), "dd-MM-yyyy");
-    const convertHHMMSS = format(new Date(), "HHmmss");
     //Thời gian để ảnh hết hạn sau 24h
     const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -175,7 +185,7 @@ class UploadService {
 
     // duyệt qua từng file ảnh để upload
     for (let i = 0; i < files.length; i++) {
-      const imgName = `${nameStorage}/${convertDDMMYYYY}/${convertHHMMSS}-${files[i].originalname}`;
+      const imgName = `${nameStorage}/${convertDDMMYYYY}/${files[i].originalname}`;
       const filePath = path.join(__dirname, "..", "uploads", files[i].filename);
 
       // Đọc file từ disk sau đó chuyển sang dạng buffer
@@ -215,7 +225,7 @@ class UploadService {
 
   static async checkAndGetImageS3ById({ imageId }) {
     //tìm ảnh bằng _id trong database
-    console.log(imageId);
+
     const image = await ImageModel.findById(imageId);
     if (!image) {
       throw new NotFoundError(
@@ -232,7 +242,7 @@ class UploadService {
     }
 
     // Xử lý khi thời gian ảnh hết hạn => ký chữ ký mới cho ảnh
-    const ImgCloudFrontUrl = `${urlImgCloudFront}/${image.key}`;
+    const ImgCloudFrontUrl = `${urlImgCloudFront}/${image.keyName}`;
 
     //Thời gian để ảnh hết hạn trong vòng 24h
     const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -261,14 +271,18 @@ class UploadService {
     const currentTime = new Date();
 
     // Kiểm tra từng image trong database rồi update lại signedUrl và expiration
+
     const checkedImagesPromises = images.map(async (image) => {
+      // Nếu thời gian sử dụng ảnh vẫn còn => trả về null vì sẽ ko cập nhật ảnh đó
       if (image.expiration > currentTime) {
-        return image;
+        return null;
       }
 
-      const ImgCloudFrontUrl = `${urlImgCloudFront}/${image.key}`;
+      // Xử lý khi thời gian ảnh hết hạn => ký chữ ký mới cho ảnh
+      const ImgCloudFrontUrl = `${urlImgCloudFront}/${image.keyName}`;
       const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+      // Ký chữ ký mới cho ảnh
       const urlSignedCloudFront = getSignedUrlCloudFront({
         url: ImgCloudFrontUrl,
         keyPairId: process.env.CLOUDFRONT_PUBLICKEY,
@@ -286,7 +300,7 @@ class UploadService {
 
     // Chạy song song get tất cả ảnh trong database
     const checkedImages = await Promise.all(checkedImagesPromises);
-    return checkedImages;
+    return checkedImages.filter((img) => img !== null);
   }
 }
 

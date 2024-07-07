@@ -80,7 +80,9 @@ const findBookPublishDetail = async ({ book_id }) => {
 };
 
 const findBookByCate = async ({ category_id }) => {
-  const category = await CategoryService.findCateById({ id: category_id });
+  const category = await CategoryService.findCatePublishedById({
+    id: category_id,
+  });
 
   if (!category) return null;
 
@@ -88,7 +90,7 @@ const findBookByCate = async ({ category_id }) => {
     .find({
       book_isDelete: false,
       isPublished: true, // only get published book
-      book_genre: { $in: [category._id] },
+      book_genre: { $in: [category_id] },
     })
     .lean()
     .exec();
@@ -164,7 +166,7 @@ const updateBookById = async ({ id, payload, isNew = true }) => {
   return newDataBook;
 };
 
-const checkBooksOrder = async ({ bookList, cartId }) => {
+const checkBooksOrder = async ({ bookList, cart_user_id }) => {
   // chạy song song nhiều hàm async cùng lúc
 
   return await Promise.all(
@@ -173,11 +175,12 @@ const checkBooksOrder = async ({ bookList, cartId }) => {
         .findOne({
           _id: book.bookId,
         })
+        .populate("book_genre")
         .lean();
 
       // kiểm tra số lượng sách trong giỏ hàng có hợp lệ không
       const isValidQuantity = await checkValidQuantityBookInCart({
-        userId: cartId,
+        userId: cart_user_id,
         bookId: book.bookId,
         quantity: book.quantity,
       });
@@ -189,6 +192,8 @@ const checkBooksOrder = async ({ bookList, cartId }) => {
           bookId: book.bookId,
           bookName: bookChecked.book_name,
           bookQuantity: book.quantity,
+          bookCategory: bookChecked.book_genre,
+          bookThumb: bookChecked.book_thumb,
         };
       } else {
         // nếu sách không hợp trả về null

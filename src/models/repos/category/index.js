@@ -17,7 +17,7 @@ const getCategoriesPublished = async () => {
 
 const findCatePublishedById = async (id) => {
   const res = await CategoryModel.find({
-    _id: Types.ObjectId(id),
+    _id: id,
     isPublished: true,
   })
     .lean()

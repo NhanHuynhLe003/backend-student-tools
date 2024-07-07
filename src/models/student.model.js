@@ -3,7 +3,7 @@ const mongoose = require("mongoose"); // Erase if already required
 const DOCUMENT_NAME = "Student";
 const COLLECTION_NAME = "Students";
 // Declare the Schema of the Mongo model
-var shopSchema = new mongoose.Schema(
+var studentSchema = new mongoose.Schema(
   {
     student_id: {
       type: String,
@@ -43,12 +43,17 @@ var shopSchema = new mongoose.Schema(
     },
     books_reading: {
       // Chứa các id của sách mà student đang đọc
-      type: [mongoose.Schema.Types.ObjectId],
+      type: [],
       default: [],
     },
     books_readed: {
-      // Chứa các id của sách mà student đã đọc (sau khi trả sách)
-      type: [mongoose.Schema.Types.ObjectId],
+      // Chứa các id của sách mà student đã mượn (không kể đã đọc bao lâu)
+      type: [],
+      default: [],
+    },
+    books_rank: {
+      // Chứa các id của sách mà student đã đọc tối thiểu 1 tuần trở lên
+      type: [],
       default: [],
     },
 
@@ -77,4 +82,4 @@ var shopSchema = new mongoose.Schema(
 );
 
 //Export the model
-module.exports = mongoose.model(DOCUMENT_NAME, shopSchema);
+module.exports = mongoose.model(DOCUMENT_NAME, studentSchema);

@@ -30,9 +30,80 @@ const {
   convertObjectId,
   addDataUniqueInListToMap,
 } = require("../utils");
+const UploadService = require("./upload.service");
+const studentModel = require("../models/student.model");
 class BookService {
+  static updateImageBookExpired = async () => {
+    const currentTime = Math.floor(new Date().getTime() / 1000);
+
+    //Tìm kiếm các quyển sách có ảnh đã hết hạn từ mongodb
+    const booksDataExpired = await bookModel.aggregate([
+      {
+        $addFields: {
+          // Tìm tất cả các giá trị khớp với regex "Expires=([0-9]+)" trong trường `book_thumb`
+          expiresArray: {
+            $regexFindAll: {
+              input: "$book_thumb", // Chuỗi URL để tìm kiếm
+              regex: "Expires=([0-9]+)", // Biểu thức chính quy để tìm giá trị Expires
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          // Trích xuất giá trị đầu tiên từ mảng các nhóm con (captures)
+          expiresString: {
+            $arrayElemAt: [
+              {
+                $map: {
+                  // Mảng các nhóm con được tìm thấy
+                  input: "$expiresArray.captures",
+                  as: "capture",
+                  in: { $arrayElemAt: ["$$capture", 0] }, // Lấy phần tử đầu tiên của mỗi nhóm con
+                },
+              },
+              0 /* Lấy phần tử đầu tiên từ mảng kết quả của $map*/,
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          // Chuyển đổi giá trị `expiresString` từ chuỗi thành số nguyên
+          expires: {
+            $toLong: "$expiresString",
+          },
+        },
+      },
+      {
+        $match: {
+          // Lọc các document sao cho `expires` nhỏ hơn thời gian hiện tại tính bằng Unix timestamp(NGHĨA LÀ ĐÃ HẾT HẠN)
+          expires: { $lt: currentTime },
+        },
+      },
+    ]);
+
+    // Sign lại các ảnh sách đã hết hạn
+    booksDataExpired.forEach(async (book) => {
+      const { signedUrl } = await UploadService.checkAndGetImageS3ById({
+        imageId: book.book_thumb_id,
+      });
+
+      // Cập nhật lại ảnh sách
+      await bookModel.updateOne(
+        { _id: book._id },
+        {
+          $set: {
+            book_thumb: signedUrl,
+          },
+        }
+      );
+    });
+  };
+
   static createBook = async ({
     userId,
+    book_thumb_id,
     book_name,
     book_author,
     book_thumb,
@@ -73,6 +144,7 @@ class BookService {
             "isPublished": true
         }
          */
+
     const newBook = await bookModel.create({
       book_name,
       book_author,
@@ -88,6 +160,7 @@ class BookService {
       book_favourites,
       isDraft,
       isPublished,
+      book_thumb_id, // book_thumb_id dùng get ảnh mới sau khi expired của thumb
     });
 
     await NotificationService.pushNotification({
@@ -97,12 +170,14 @@ class BookService {
       noti_options: {
         book_id: newBook._id,
         book_name: newBook.book_name,
+        book_thumb: newBook.book_thumb,
       },
     });
     return newBook;
   };
 
   static getRecommendBooks = async ({ skip = 0, limit = 20 }) => {
+    await this.updateImageBookExpired();
     const response = await bookModel
       .find({})
       .sort({
@@ -117,31 +192,39 @@ class BookService {
   };
 
   static findBookDraftDetail = async ({ id }) => {
+    await this.updateImageBookExpired(); //Cập nhật ảnh sách hết hạn
     const res = await findBookDraftDetail({ book_id: id });
     if (!res) throw new NotFoundError("not found");
     return res;
   };
 
   static findBookPublishDetail = async ({ id }) => {
+    await this.updateImageBookExpired();
     const res = await findBookPublishDetail({ book_id: id });
     if (!res) throw new NotFoundError("not found");
     return res;
   };
 
   static findDraftBook = async ({ skip = 0, limit = 50 }) => {
+    await this.updateImageBookExpired();
     const query = { isDraft: true, book_isDelete: false };
     const res = await findDraftBook({ query, limit, skip });
     if (!res) throw new NotFoundError("not found");
     return res;
   };
   static findPublishBook = async ({ skip = 0, limit = 50 }) => {
+    await this.updateImageBookExpired();
     const query = { isPublished: true, book_isDelete: false };
+
     const res = await findPublishBook({ query, skip, limit });
+
     if (!res) throw new NotFoundError("not found");
+
     return res;
   };
   static findBookByText = async (textSearch) => {
     // console.log("Text-Search::: ", textSearch);
+    await this.updateImageBookExpired();
     const res = await findBookByText(textSearch);
     if (!res) throw new NotFoundError("not found");
     return res;
@@ -156,6 +239,7 @@ class BookService {
   };
 
   static findBookByCategory = async ({ category_id }) => {
+    await this.updateImageBookExpired();
     console.log(`category_id::: ${category_id}`);
     return await findBookByCate({ category_id });
   };
@@ -196,23 +280,40 @@ class BookService {
   };
 
   static sortBookByReadView = async ({ skip = 0, limit = 50 }) => {
+    await this.updateImageBookExpired();
     return await sortBookByReadView({ skip, limit });
   };
 
   static sortBookByFavourite = async ({ skip = 0, limit = 50 }) => {
+    await this.updateImageBookExpired();
     return await sortBookByFavourite({ skip, limit });
   };
 
   static sortBookByRatings = async ({ skip = 0, limit = 50 }) => {
+    await this.updateImageBookExpired();
     return await sortBookByRatings({ skip, limit });
   };
 
   static sortBookByNewest = async ({ skip = 0, limit = 50 }) => {
+    await this.updateImageBookExpired();
     return await sortBookByNewest({ skip, limit });
   };
 
   static getAllBookInStock = async ({ skip = 0, limit = 50 }) => {
+    await this.updateImageBookExpired();
     return await getAllBookInStock({ skip, limit });
+  };
+
+  static getBooksInStudentBookshelf = async ({
+    userId,
+    skip = 0,
+    limit = 10,
+  }) => {
+    await studentModel
+      .findById(userId)
+      .select("books_reading")
+      .lean()
+      .exec();
   };
 
   static mergeFilterBook = async ({

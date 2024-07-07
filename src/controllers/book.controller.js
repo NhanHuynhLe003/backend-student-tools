@@ -136,5 +136,12 @@ class BookController {
       metadata: await BookService.mergeFilterBook(req.query),
     }).send(res);
   };
+
+  getBooksInStudentBookshelf = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy sách trong kệ sách học sinh thành công",
+      metadata: await BookService.getBooksInStudentBookshelf(req.params),
+    }).send(res);
+  };
 }
 module.exports = new BookController();
