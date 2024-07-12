@@ -167,7 +167,7 @@ const updateBookById = async ({ id, payload, isNew = true }) => {
 };
 
 const checkBooksOrder = async ({ bookList, cart_user_id }) => {
-  // chạy song song nhiều hàm async cùng lúc
+  // chờ tất cả các promise trả về
 
   return await Promise.all(
     bookList.map(async (book) => {
@@ -190,6 +190,7 @@ const checkBooksOrder = async ({ bookList, cart_user_id }) => {
         //book.quantity <= bookChecked.quantity
         return {
           bookId: book.bookId,
+          bookReaded: false,
           bookName: bookChecked.book_name,
           bookQuantity: book.quantity,
           bookCategory: bookChecked.book_genre,

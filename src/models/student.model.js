@@ -31,11 +31,15 @@ var studentSchema = new mongoose.Schema(
     },
     date_of_birth: {
       type: Date,
-      default: new Date(2003, 1, 1),
+      default: new Date(2000, 1, 1),
     },
-    cv_path: {
-      type: String,
-      default: "",
+    cvId: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "CvStudent",
+        },
+      ],
     },
     portfolio_path: {
       type: String,

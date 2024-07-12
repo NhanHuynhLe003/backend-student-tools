@@ -1,12 +1,16 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const DOCUMENT_NAME = "Cv";
-const COLLECTION_NAME = "Cv";
+const DOCUMENT_NAME = "CvStudent";
+const COLLECTION_NAME = "CvStudents";
 
-const CvSchema = new Schema(
+const CvStudentSchema = new Schema(
   {
     cvUserId: mongoose.Schema.Types.ObjectId,
+    cvParentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cv",
+    },
     title: String,
     thumbnail: String,
     isDelete: {
@@ -76,4 +80,4 @@ const CvSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model(DOCUMENT_NAME, CvSchema);
+module.exports = mongoose.model(DOCUMENT_NAME, CvStudentSchema);

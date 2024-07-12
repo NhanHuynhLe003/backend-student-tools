@@ -320,6 +320,9 @@ class BookService {
     sortType = "all",
     categoryId = "all",
     instockType = "all",
+    search = "",
+    skip = 0,
+    limit = 50,
   }) => {
     let sortQueryRes = [];
     let cateQueryRes = [];
@@ -329,37 +332,37 @@ class BookService {
     switch (sortType) {
       case "read":
         // tìm sách có lượt đọc cao nhất
-        sortQueryRes = await this.sortBookByReadView({ skip: 0, limit: 50 });
+        sortQueryRes = await this.sortBookByReadView({ skip, limit });
         break;
       case "favourite":
         // tìm sách có lượt yêu thích cao nhất
-        sortQueryRes = await this.sortBookByFavourite({ skip: 0, limit: 50 });
+        sortQueryRes = await this.sortBookByFavourite({ skip, limit });
         break;
       case "rating":
         // tìm sách có lượt đánh giá cao nhất
-        sortQueryRes = await this.sortBookByRatings({ skip: 0, limit: 50 });
+        sortQueryRes = await this.sortBookByRatings({ skip, limit });
         break;
       case "newest":
         // tìm sách mới nhất
-        sortQueryRes = await this.sortBookByNewest({ skip: 0, limit: 50 });
+        sortQueryRes = await this.sortBookByNewest({ skip, limit });
       default:
         // tìm tất cả sách có trong kho
-        sortQueryRes = await this.findPublishBook({ skip: 0, limit: 50 });
+        sortQueryRes = await this.findPublishBook({ skip, limit });
     }
 
     // lọc sách theo thể loại
     if (categoryId !== "all") {
       cateQueryRes = await this.findBookByCategory({ category_id: categoryId });
     } else {
-      cateQueryRes = await this.findPublishBook({ skip: 0, limit: 50 });
+      cateQueryRes = await this.findPublishBook({ skip, limit });
     }
 
     // lọc sách theo tình trạng trong kho
     if (instockType !== "all") {
       //lấy sách còn hàng trong kho
-      instockQueryRes = await this.getAllBookInStock({ skip: 0, limit: 50 });
+      instockQueryRes = await this.getAllBookInStock({ skip, limit });
     } else {
-      instockQueryRes = await this.findPublishBook({ skip: 0, limit: 50 });
+      instockQueryRes = await this.findPublishBook({ skip, limit });
     }
 
     // Để theo dõi sự xuất hiện của mỗi sản phẩm
@@ -394,7 +397,10 @@ class BookService {
       .filter((item) => item.count === 3)
       .map((item) => item.book);
 
-    return commonResults;
+    return {
+      result: commonResults,
+      total: commonResults.length,
+    };
   };
 
   // Tính năng trả sách sẽ được thêm trong kho sách của học sinh, học sinh có quyền trả sách hoặc xin gia hạn(cần xác nhận admin).

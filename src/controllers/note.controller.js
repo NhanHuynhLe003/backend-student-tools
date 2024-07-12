@@ -27,7 +27,10 @@ class NoteController {
   getAllNotesByUser = async (req, res, next) => {
     new Created({
       message: "Lấy Tất Cả Sách Thành Công",
-      metadata: await NoteService.getAllNotesByUser(req.params),
+      metadata: await NoteService.getAllNotesByUser({
+        note_userId: req.params.note_userId,
+        ...req.query,
+      }),
     }).send(res);
   };
 

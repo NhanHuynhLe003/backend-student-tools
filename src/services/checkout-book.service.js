@@ -1,7 +1,11 @@
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
 const CartModel = require("../models/cart.model");
 const StudentModel = require("../models/student.model");
-const { convertDateToDDMMYYYY, convertObjectId } = require("../utils");
+const {
+  convertDateToDDMMYYYY,
+  convertObjectId,
+  getDataInfoResponse,
+} = require("../utils");
 const { checkBooksOrder } = require("../models/repos/book");
 const {
   acquireLock,
@@ -237,12 +241,6 @@ class CheckoutBookService {
 
     console.log("foundOrder:::::", foundOrder);
 
-    // const foundBook = await StudentModel.aggregate([
-    //   { $unwind: "$books_reading" }, // tách các sách ra từ mảng books_reading
-    //   { $match: { "books_reading.book_orderId": foundOrder._id} }, // lọc sách theo id order
-    //   { $project: { _id: 1, book: "$books_reading" } }, // chọn ra các thông tin cần thiết
-    // ]);
-
     const foundStudent = await StudentModel.findOne({
       _id: foundOrder.order_userId,
     });
@@ -268,7 +266,9 @@ class CheckoutBookService {
         await bookInStockLib.save();
 
         // Chuyển trạng thái sách từ đang đọc sang hoàn tất
-        book.book_status = "completed";
+        // book.book_status = "completed";
+        // const bookCompleted = book.book_reading.find(book => book.book_status === "completed");
+        // book.book_readed.push(bookCompleted);
       }
     });
 
@@ -278,11 +278,13 @@ class CheckoutBookService {
     // Lưu đối tượng học sinh sau khi cập nhật sách
     await foundStudent.save();
 
+    console.log("FOUND ORDER:::", foundOrder);
+
     // Kiểm tra xem đơn hàng còn sách nào không, nếu không còn sách nào thì chuyển trạng thái đơn hàng sang hoàn tất
-    if (foundOrder.order_books.length === 1) {
-      foundOrder.order_status = "completed";
-      await foundOrder.save();
-    }
+    // if (foundOrder.) {
+    //   foundOrder.order_status = "completed";
+    //   await foundOrder.save();
+    // }
 
     return {
       order: foundOrder,
@@ -338,7 +340,7 @@ class CheckoutBookService {
    * @param {Object} param
    * @param {String} param.orderId - id của order(objectId)
    */
-  static cancelOrderBookByUser = async ({ orderId }) => {
+  static cancelOrderBookByUser = async ({ orderId, bookId, userId }) => {
     const order = await OrderModel.findOne({ _id: orderId });
 
     if (!order) throw new NotFoundError("Không tìm thấy đơn hàng");
@@ -347,7 +349,7 @@ class CheckoutBookService {
       throw new BadRequestError("Đơn mượn sách đã bị hủy trước đó");
 
     if (order.order_status === "completed")
-      throw new BadRequestError("Đơn mượn sách đã được xác nhận không thể hủy");
+      throw new BadRequestError("Đơn mượn sách đã hoàn tất không thể hủy");
 
     // trả lại sách vào kho
     const foundOrder = await OrderModel.findById(orderId);

@@ -18,7 +18,7 @@ router.get("/name", asyncHandleError(NoteController.getNoteByName));
 router.post("/level", asyncHandleError(NoteController.updateNoteLevel));
 router.get("/:id", asyncHandleError(NoteController.getNoteById));
 router.put("/:id", asyncHandleError(NoteController.updateNote));
-router.get("/", asyncHandleError(NoteController.getAllNotesByUser));
+router.get("/user/:id", asyncHandleError(NoteController.getAllNotesByUser));
 
 //GET, POST, PUT, PATCH, DELETE ->
 //create book

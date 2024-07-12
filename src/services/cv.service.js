@@ -1,6 +1,8 @@
 "use strict";
 
 const CvModel = require("../models/cv.model");
+const cvStudentModel = require("../models/cvStudent.model");
+const studentModel = require("../models/student.model");
 
 class CvService {
   // Tạo bảng trống cho CV đầu tiên của user
@@ -44,7 +46,7 @@ class CvService {
       listDataItem: [],
     };
 
-    const res = await CvModel.updateOne(
+    const res = await CvModel.findOneAndUpdate(
       { _id: cvId, cvUserId: userId },
       { $push: { boards: newBoard } },
       { upsert: true, new: true }
@@ -78,7 +80,7 @@ class CvService {
       { _id: cvId, cvUserId: userId },
       payload,
       {
-        upsert: true, // Nếu không tìm thấy thì không tạo mới
+        upsert: true,
         new: true,
       }
     );
@@ -112,6 +114,7 @@ class CvService {
   };
 
   static getCvById = async ({ cvId, userId }) => {
+    console.log("cvId", cvId, "userId", userId);
     const res = await CvModel.findOne({
       _id: cvId,
       isDelete: false,
@@ -120,14 +123,27 @@ class CvService {
     return res;
   };
 
-  static getAllCvsByAdmin = async () => {
-    const res = await CvModel.find({ isDelete: false });
-    return res;
+  static getAllCvsByAdmin = async ({ skip = 0, limit = 20 }) => {
+    const total = await CvModel.countDocuments({ isDelete: false }).exec();
+    const res = await CvModel.find({ isDelete: false })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    return {
+      total: total,
+      result: res,
+    };
   };
 
   static getCvPublished = async () => {
     const res = await CvModel.find({ status: "public", isDelete: false });
     return res;
+  };
+
+  static sendCvToStudent = async (payload) => {
+    const { cvId, userId } = payload;
+
+    const students = await studentModel.find({});
   };
 }
 

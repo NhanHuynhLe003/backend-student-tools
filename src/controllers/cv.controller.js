@@ -37,14 +37,17 @@ class CvController {
   getCvById = async (req, res, next) => {
     new SuccessResponse({
       message: "Lấy thông tin Cv thành công !",
-      metadata: await CvService.getCvById(req.body),
+      metadata: await CvService.getCvById({
+        cvId: req.params.cvId,
+        userId: req.query.userId,
+      }),
     }).send(res);
   };
 
   getAllCvsByAdmin = async (req, res, next) => {
     new SuccessResponse({
       message: "Lấy danh sách Cv thành công !",
-      metadata: await CvService.getAllCvsByAdmin(),
+      metadata: await CvService.getAllCvsByAdmin({ ...req.query }),
     }).send(res);
   };
 
