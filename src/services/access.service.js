@@ -17,10 +17,10 @@ const { findStudentByEmailRepo } = require("../models/repos/student.repo");
 const { default: slugify } = require("slugify");
 
 const ROLEBOARD = {
-  ADMIN: "ROLE-001",
+  ADMIN: "41444D494E", //ADMIN -> ASCII -> HEX
   WRITER: "ROLE-002",
   EDITOR: "ROLE-003",
-  USER: "ROLE-004",
+  USER: "53545544494E54",
 };
 
 class AccessService {
@@ -165,7 +165,7 @@ class AccessService {
     return {
       //Sử dụng lodash để lấy các field trả về cần thiết cho student và gắn vào request ở client
       student: getDataInfoResponse(
-        ["_id", "name", "email", "classStudent"],
+        ["_id", "name", "email", "student_id", "classStudent", "roles"],
         studentFound
       ),
       tokens: tokensLogin,
@@ -195,15 +195,25 @@ class AccessService {
    * 6. get data info response
    */
   static signUp = async ({
-    studentId,
+    studentId = crypto.randomBytes(10).toString("hex"),
     name,
     email,
     password,
     classStudent,
+    mode = ROLEBOARD.USER,
   }) => {
+    console.log("Success Register:::::", {
+      studentId,
+      name,
+      email,
+      password,
+      classStudent,
+      mode,
+    });
+
     //1. check student existed
     const studentExisted = await studentModel
-      .findOne({ email, studentId })
+      .findOne({ email, student_id: studentId })
       .lean();
     // => lean ở đây có tác dụng thu gọn data response trả về đúng chuẩn js object
     if (studentExisted) {
@@ -222,7 +232,7 @@ class AccessService {
       name: name,
       email,
       password: passwordHashed,
-      roles: [ROLEBOARD.USER],
+      roles: mode === ROLEBOARD.ADMIN ? [ROLEBOARD.ADMIN] : [ROLEBOARD.USER],
     });
 
     if (newStudent) {

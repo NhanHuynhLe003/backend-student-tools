@@ -4,6 +4,22 @@ const UploadService = require("../services/upload.service");
 const { convertObjectId } = require("../utils");
 
 class UploadController {
+  uploadSingleImgInfinity = async (req, res, next) => {
+    const { file } = req;
+
+    if (!file) {
+      throw new BadRequestError("Missing File Upload!");
+    }
+
+    new SuccessResponse({
+      message: "Upload ảnh lên s3 thành công ! ",
+      metadata: await UploadService.uploadSingleImgInfinity({
+        file,
+        nameStorage: req.query.nameStorage,
+      }),
+    }).send(res);
+  };
+
   /**
    * @description Upload ảnh lên s3 bằng memory
    * @param {*} req

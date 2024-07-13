@@ -44,6 +44,16 @@ class CvController {
     }).send(res);
   };
 
+  getCvByIdAndUserId = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy thông tin Cv thành công !",
+      metadata: await CvService.getCvByIdAndUserId({
+        cvId: req.params.cvId,
+        userId: req.query.userId,
+      }),
+    }).send(res);
+  };
+
   getAllCvsByAdmin = async (req, res, next) => {
     new SuccessResponse({
       message: "Lấy danh sách Cv thành công !",
@@ -69,6 +79,20 @@ class CvController {
     new Created({
       message: "Thêm board vào Cv thành công !",
       metadata: await CvService.addBoardIntoCv(req.body),
+    }).send(res);
+  };
+
+  sendCvToStudent = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Gửi Cv thành công !",
+      metadata: await CvService.sendCvToStudent(req.body),
+    }).send(res);
+  };
+
+  getImgsByUserId = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách ảnh thành công !",
+      metadata: await CvService.getImgsByUserId(req.params),
     }).send(res);
   };
 }

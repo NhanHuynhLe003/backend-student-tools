@@ -18,6 +18,42 @@ const ImageModel = require("../models/image.model");
 const urlImgCloudFront = process.env.CLOUDFRONT_URL;
 
 class UploadService {
+  static async uploadSingleImgInfinity({ file, nameStorage = "books" }) {
+    //tạo tên folder ngày hiện tại upload ảnh
+    const convertDDMMYYYY = format(new Date(), "dd-MM-yyyy");
+    //Thời gian để ảnh hết hạn
+    const expiredTimeUrlImg = new Date(
+      Date.now() + 3 * 365 * 24 * 60 * 60 * 1000
+    ); // url img hết hạn sau 3 năm
+
+    const imgName = `${nameStorage}/${convertDDMMYYYY}/${file.originalname}`;
+
+    //(*) lưu tên file ảnh vào database của BOOKS
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: imgName,
+      Body: file.buffer, // chỉ có upload dưới dạng memory mới lưu được với buffer, disk thì không, buffer là dạng binary của ảnh
+      ContentType: "image/jpeg",
+    });
+
+    const result = await s3.send(command);
+    const ImgCloudFrontUrl = `${urlImgCloudFront}/${imgName}`;
+
+    // Hàm dùng để tạo ra URL có chữ ký bảo mật, hạn chế truy cập ảnh trái phép từ CloudFront
+    const urlSignedCloudFront = getSignedUrlCloudFront({
+      url: ImgCloudFrontUrl,
+      keyPairId: process.env.CLOUDFRONT_PUBLICKEY, // name publickey của CloudFront đã tạo
+      dateLessThan: expiredTimeUrlImg, // url img hết hạn sau 2h
+      privateKey: process.env.CLOUDFRONT_PRIVATEKEY, // privatekey của user tạo bằng rsa
+    });
+
+    return {
+      url: urlSignedCloudFront, // trả về thông tin ảnh, trong đó có url truy cập ảnh
+      result,
+    };
+  }
+
   /**
    * @description Hàm xử lý upload ảnh đơn lên S3 có kết hợp với CloudFront(Có xác thực chữ ký, bảo mật URL)
    * @param {object} file - file ảnh cần upload, sử dụng multer để xử lý

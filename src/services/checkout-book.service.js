@@ -27,58 +27,38 @@ class CheckoutBookService {
     book_status = "pending",
     mode = "add",
   }) {
-    // Thêm những cuốn sách đang đọc vào kho sách user
+    if (!order || !order.order_books || !order._id || !order.order_userId) {
+      throw new Error("Invalid order input");
+    }
+
+    const student = await StudentModel.findById(order.order_userId);
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
     for (const book of order.order_books) {
-      // Tách số lượng các quyển sách ra làm từng quyển sách riêng biệt để dễ dàng quản lý
       for (let i = 0; i < book.bookQuantity; i++) {
-        const updatePayload =
-          mode === "add"
-            ? {
-                $addToSet: {
-                  books_reading: {
-                    book_orderId: order._id, // query để kiểm tra trạng thái sách user đọc
-                    book_status: book_status,
-                    book_checkout: order.order_checkout,
-                    book_data: { ...book, bookQuantity: 1 },
-                  },
-                },
-              }
-            : {
-                $set: {
-                  /**
-                   $[<identifier>] để chỉ định một phần tử cụ thể trong mảng books_reading 
-                   cần được cập nhật, và arrayFilters để xác định điều kiện tìm kiếm phần tử đó
-                   */
-                  "books_reading.$[elem].book_status": book_status,
-                },
-              };
-
-        /**
-         $set kèm với arrayFilters để cập nhật trạng thái sách dựa trên chỉ mục. 
-         arrayFilters giúp xác định chính xác sách nào trong mảng books_reading 
-         cần được cập nhật dựa trên book_orderId và book_data.bookId.
-         */
-        const arrayFilters =
-          mode === "add"
-            ? []
-            : [
-                {
-                  "elem.book_orderId": order._id,
-                  "elem.book_data.bookId": book.bookId,
-                },
-              ];
-
-        await StudentModel.updateOne(
-          {
-            _id: order.order_userId,
-          },
-          updatePayload,
-          {
-            arrayFilters: arrayFilters,
+        if (mode === "add") {
+          student.books_reading.push({
+            book_orderId: order._id,
+            book_status: book_status,
+            book_checkout: order.order_checkout,
+            book_data: { ...book, bookQuantity: 1 },
+          });
+        } else {
+          const bookToUpdate = student.books_reading.find(
+            (b) =>
+              b.book_orderId.equals(order._id) &&
+              b.book_data.bookId === book.bookId
+          );
+          if (bookToUpdate) {
+            bookToUpdate.book_status = book_status;
           }
-        );
+        }
       }
     }
+
+    await student.save();
   }
 
   /**
@@ -239,8 +219,6 @@ class CheckoutBookService {
     if (foundOrder.order_status === "pending")
       throw new BadRequestError("Đơn chưa được xác nhận, không thể trả sách");
 
-    console.log("foundOrder:::::", foundOrder);
-
     const foundStudent = await StudentModel.findOne({
       _id: foundOrder.order_userId,
     });
@@ -265,31 +243,58 @@ class CheckoutBookService {
         bookInStockLib.book_quantity += 1;
         await bookInStockLib.save();
 
-        // Chuyển trạng thái sách từ đang đọc sang hoàn tất
-        // book.book_status = "completed";
-        // const bookCompleted = book.book_reading.find(book => book.book_status === "completed");
-        // book.book_readed.push(bookCompleted);
+        // ===========Cập nhật ngày trả sách ==============
+        const newBookUserReaded = {
+          ...book,
+          book_checkout: {
+            ...book.book_checkout,
+            returnDate: convertDateToDDMMYYYY(new Date()),
+          },
+          book_status: "completed",
+        };
+        foundOrder.order_checkout.returnDate = convertDateToDDMMYYYY(
+          new Date()
+        );
+
+        // Chuyển sách đang đọc vào sách đã hoàn thành của user
+        foundStudent.books_reading = foundStudent.books_reading.filter(
+          (book) => book.book_data.bookId.toString() !== bookId.toString()
+        );
+
+        // Thêm sách đã đọc vào mảng sách đã đọc của user
+        foundStudent.books_readed.push(newBookUserReaded);
+
+        // Lưu lại đối tượng học sinh sau khi cập nhật sách đang đọc
+        await foundStudent.save();
+
+        // Lấy quyển sách ra khỏi kho sách user
+        foundOrder.order_books = foundOrder.order_books.filter(
+          (book) => book.bookId.toString() !== bookId.toString()
+        );
+        await foundOrder.save();
       }
     });
 
     // Chờ tất cả các sách cập nhật hoàn tất
     await Promise.all(updateBooksPromises);
 
-    // Lưu đối tượng học sinh sau khi cập nhật sách
-    await foundStudent.save();
-
-    console.log("FOUND ORDER:::", foundOrder);
-
     // Kiểm tra xem đơn hàng còn sách nào không, nếu không còn sách nào thì chuyển trạng thái đơn hàng sang hoàn tất
-    // if (foundOrder.) {
-    //   foundOrder.order_status = "completed";
-    //   await foundOrder.save();
-    // }
+    if (foundOrder.order_books.length === 0) {
+      foundOrder.order_status = "completed";
+      await foundOrder.save();
+    }
 
     return {
       order: foundOrder,
       student: getDataInfoResponse(
-        ["_id", "name", "email", "classStudent"],
+        [
+          "_id",
+          "name",
+          "email",
+          "classStudent",
+          "books_reading",
+          "books_readed",
+        ],
         foundStudent
       ),
       studentBooks: booksStudentReading,

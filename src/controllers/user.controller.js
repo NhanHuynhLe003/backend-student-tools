@@ -9,6 +9,13 @@ class UserController {
       metadata: await UserService.getStudentBooksReading(req.params),
     }).send(res);
   };
+
+  getStudentBooksReaded = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách các quyển sách học sinh đang đọc thành công !",
+      metadata: await UserService.getStudentBooksReaded(req.params),
+    }).send(res);
+  };
 }
 
 module.exports = new UserController();

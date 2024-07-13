@@ -23,7 +23,8 @@ const apiKey = async (req, res, next) => {
       });
     }
     console.log("NEW API KEY::: ", objKey);
-    //nếu key đã có rồi thì đính kèm key đó vào request
+
+    //(*)nếu key đã có rồi thì đính kèm key đó vào request để sử dụng
     req.objKey = objKey;
 
     return next();

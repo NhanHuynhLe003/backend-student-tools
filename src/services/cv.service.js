@@ -5,6 +5,8 @@ const cvStudentModel = require("../models/cvStudent.model");
 const studentModel = require("../models/student.model");
 
 class CvService {
+  static getImgsByUserId = async ({ userId }) => {};
+
   // Tạo bảng trống cho CV đầu tiên của user
   static createEmptyCv = async ({ userId }) => {
     const newCv = await CvModel.create({
@@ -113,12 +115,19 @@ class CvService {
     };
   };
 
-  static getCvById = async ({ cvId, userId }) => {
-    console.log("cvId", cvId, "userId", userId);
+  static getCvById = async ({ cvId }) => {
     const res = await CvModel.findOne({
       _id: cvId,
       isDelete: false,
+    });
+    return res;
+  };
+
+  static getCvByIdAndUserId = async ({ cvId, userId }) => {
+    const res = await CvModel.findOne({
+      _id: cvId,
       cvUserId: userId,
+      isDelete: false,
     });
     return res;
   };
@@ -140,10 +149,42 @@ class CvService {
     return res;
   };
 
-  static sendCvToStudent = async (payload) => {
-    const { cvId, userId } = payload;
+  static sendCvToStudent = async ({ cvId, userId, studentClass, cvData }) => {
+    // 1. Lấy danh sách học sinh theo lớp học
+    const students = await studentModel.find({ classStudent: studentClass });
 
-    const students = await studentModel.find({});
+    if (!students || students.length === 0) {
+      throw new Error("Không tìm thấy lớp học!");
+    }
+
+    // 2. Tạo CV mới cho từng học sinh với cvData
+    const cvPromises = students.map((student) => {
+      if (student._id.toString() === userId.toString()) return null;
+
+      return CvModel.create({
+        ...cvData,
+        cvParentId: cvId,
+        cvUserId: student._id,
+        cvParentUserId: userId,
+        status: "private",
+        isDragDisabled: true,
+      });
+    });
+
+    const createdCvs = await Promise.all(cvPromises);
+
+    console.log(
+      "cvId:",
+      cvId,
+      "userId:",
+      userId,
+      "studentClass:",
+      studentClass,
+      "cvData:",
+      cvData
+    );
+
+    return createdCvs;
   };
 }
 

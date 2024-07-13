@@ -1,5 +1,12 @@
 const mongoose = require("mongoose"); // Erase if already required
 
+const ROLEBOARD = {
+  ADMIN: "41444D494E",
+  WRITER: "ROLE-002",
+  EDITOR: "ROLE-003",
+  USER: "53545544494E54",
+};
+
 const DOCUMENT_NAME = "Student";
 const COLLECTION_NAME = "Students";
 // Declare the Schema of the Mongo model
@@ -7,10 +14,13 @@ var studentSchema = new mongoose.Schema(
   {
     student_id: {
       type: String,
-      required: true,
-      unique: true, // Mã sinh viên là duy nhất vd: 0308211150
+      // required: true,
+      // unique: true, // Mã sinh viên là duy nhất vd: 0308211150
     },
-    classStudent: { type: String, required: true },
+    classStudent: {
+      type: String,
+      // required: true
+    },
     name: {
       type: String,
       trim: true,
@@ -33,14 +43,14 @@ var studentSchema = new mongoose.Schema(
       type: Date,
       default: new Date(2000, 1, 1),
     },
-    cvId: {
-      type: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "CvStudent",
-        },
-      ],
-    },
+    // cvId: {
+    //   type: [
+    //     {
+    //       type: mongoose.Schema.Types.ObjectId,
+    //       ref: "CvStudent",
+    //     },
+    //   ],
+    // },
     portfolio_path: {
       type: String,
       default: "",
@@ -76,7 +86,7 @@ var studentSchema = new mongoose.Schema(
     // Student sẽ được cấp những quyền gì: Writer, Reader
     roles: {
       type: Array,
-      default: ["STUDENT"],
+      default: [ROLEBOARD.USER],
     },
   },
   {

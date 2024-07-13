@@ -7,6 +7,8 @@ const COLLECTION_NAME = "Cv";
 const CvSchema = new Schema(
   {
     cvUserId: mongoose.Schema.Types.ObjectId,
+    cvParentUserId: mongoose.Schema.Types.ObjectId,
+    cvParentId: mongoose.Schema.Types.ObjectId,
     title: String,
     thumbnail: String,
     isDelete: {
@@ -25,7 +27,7 @@ const CvSchema = new Schema(
     boards: [
       {
         cvId: mongoose.Schema.Types.ObjectId,
-        cvUserId: mongoose.Schema.Types.ObjectId,
+        cvUserId: mongoose.Schema.Types.ObjectId, // có thể là id của user của user | admin
         name: String,
         position: {
           top: Number,

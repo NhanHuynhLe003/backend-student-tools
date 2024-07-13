@@ -9,6 +9,7 @@ const findStudentByEmailRepo = async ({
     classStudent: 1,
     roles: 1,
     status: 1,
+    student_id: 1,
   },
 }) => {
   try {

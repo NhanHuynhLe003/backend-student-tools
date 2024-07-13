@@ -49,4 +49,10 @@ router.post(
   asyncHandleError(UploadController.uploadMultipleDiskImgToS3)
 );
 
+router.post(
+  "/static/img",
+  uploadMemory.single("uploadFileKey"),
+  asyncHandleError(UploadController.uploadSingleImgInfinity)
+);
+
 module.exports = router;

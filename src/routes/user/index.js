@@ -12,6 +12,10 @@ router.get(
   "/books-reading/:userId",
   asyncHandleError(userController.getStudentBooksReading)
 );
+router.get(
+  "/books-readed/:userId",
+  asyncHandleError(userController.getStudentBooksReaded)
+);
 
 //GET, POST, PUT, PATCH, DELETE ->
 //create book

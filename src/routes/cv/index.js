@@ -9,7 +9,13 @@ const { authentication } = require("../../auth/auth-util");
 router.use(authentication);
 router.post("/add/item", asyncHandleError(CvController.addItemIntoBoard));
 router.post("/add/board", asyncHandleError(CvController.addBoardIntoCv));
-router.get("/user/:userId", asyncHandleError(CvController.getCvsByUserId));
+router.get("/list/:userId", asyncHandleError(CvController.getCvsByUserId));
+router.get(
+  "/detail/:userId",
+  asyncHandleError(CvController.getCvByIdAndUserId)
+);
+
+router.get("/imgs/:userId", asyncHandleError(CvController.getImgsByUserId));
 router.get("/:cvId", asyncHandleError(CvController.getCvById));
 router.post("/", asyncHandleError(CvController.createEmptyCv));
 router.put("/", asyncHandleError(CvController.updateCv));
@@ -17,6 +23,8 @@ router.delete("/", asyncHandleError(CvController.deleteCv));
 
 //ADMIN
 router.get("/admin/all", asyncHandleError(CvController.getAllCvsByAdmin));
+router.post("/admin/send", asyncHandleError(CvController.sendCvToStudent));
+
 //GET, POST, PUT, PATCH, DELETE ->
 //create book
 
