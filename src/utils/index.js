@@ -66,7 +66,7 @@ const nestedObjectConvert = (obj) => {
 };
 
 const convertDateToDDMMYYYY = (date) => {
-  return format(date, "dd-mm-yyyy");
+  return format(date, "dd-MM-yyyy");
 };
 
 /**

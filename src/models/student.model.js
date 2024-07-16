@@ -12,6 +12,10 @@ const COLLECTION_NAME = "Students";
 // Declare the Schema of the Mongo model
 var studentSchema = new mongoose.Schema(
   {
+    profileImage: {
+      type: String,
+      default: "",
+    },
     student_id: {
       type: String,
       // required: true,
@@ -75,7 +79,7 @@ var studentSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["active", "inactive"],
-      default: "inactive",
+      default: "active",
     },
     // Yêu cầu xác thực đối với các phương thức lấy lại mật khẩu, Đổi mật khẩu, ...
     verify: {

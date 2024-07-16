@@ -10,6 +10,7 @@ const findStudentByEmailRepo = async ({
     roles: 1,
     status: 1,
     student_id: 1,
+    profileImage: 1,
   },
 }) => {
   try {

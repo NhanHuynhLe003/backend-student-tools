@@ -50,6 +50,12 @@ const noteSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    //Lần ôn tập thẻ gần nhất, sử dụng để hiển thị bên trang biểu đồ
+    // Dựa vào ngày để query theo tuần tháng, trả về mảng hiển thị biểu đồ phía client
+    last_preview_date: {
+      type: Date,
+      default: Date.now,
+    },
     due_date: {
       type: Date,
       default: Date.now,

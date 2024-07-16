@@ -8,11 +8,18 @@ const { authentication } = require("../../auth/auth-util");
 //các url bên dưới authentication đều phải xác thực mới được truy cập
 router.use(authentication);
 
+router.get(
+  "/origin/:userId",
+  asyncHandleError(NoteController.layNhungNoteGocUser)
+);
 router.post(
   "/create/origin",
   asyncHandleError(NoteController.createOriginNote)
 );
-router.get("/today", asyncHandleError(NoteController.layNhungNoteOntapHomNay));
+router.get(
+  "/today/:note_userId",
+  asyncHandleError(NoteController.layNhungNoteOntapHomNay)
+);
 router.post("/add", asyncHandleError(NoteController.addChildNote));
 router.get("/name", asyncHandleError(NoteController.getNoteByName));
 router.post("/level", asyncHandleError(NoteController.updateNoteLevel));

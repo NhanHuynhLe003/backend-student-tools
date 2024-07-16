@@ -132,7 +132,7 @@ class AccessService {
    * 6. Trả về thông tin Student và cặp tokens cho người dùng.
    */
   static login = async ({ email, password, refreshToken = null }) => {
-    //1. check student bằng mail
+    //1. check student bằng mail, Trong này có chứa các field cần thiết RESPONSE cho student
     const studentFound = await findStudentByEmailRepo({ email });
     if (!studentFound) {
       throw new BadRequestError("Student is not Registered");
@@ -165,7 +165,15 @@ class AccessService {
     return {
       //Sử dụng lodash để lấy các field trả về cần thiết cho student và gắn vào request ở client
       student: getDataInfoResponse(
-        ["_id", "name", "email", "student_id", "classStudent", "roles"],
+        [
+          "_id",
+          "name",
+          "email",
+          "student_id",
+          "classStudent",
+          "roles",
+          "profileImage",
+        ],
         studentFound
       ),
       tokens: tokensLogin,

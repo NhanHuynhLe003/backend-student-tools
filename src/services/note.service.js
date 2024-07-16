@@ -35,15 +35,19 @@ class NoteService {
   };
 
   //Tạo mới note
-  static addChildNote = async ({
-    note_userId,
-    note_title,
-    note_content,
-    note_cloze,
-    note_level,
-    note_parentId,
-    clozes = [],
-  }) => {
+  static addChildNote = async (payload) => {
+    const {
+      note_parentId,
+      note_userId,
+      note_title,
+      note_content,
+      note_cloze,
+      note_level,
+      clozes,
+    } = payload;
+
+    console.log("[PAYLOAD]: ", payload);
+
     const newNote = await NoteModel.create({
       note_parentId: note_parentId,
       note_userId: note_userId,
@@ -82,6 +86,47 @@ class NoteService {
     }
 
     return checkNoteUser;
+  };
+
+  static layNhungNoteGocUser = async ({
+    note_userId,
+    skip = 0,
+    limit = 20,
+  }) => {
+    const notesFound = await NoteModel.find({
+      note_userId: note_userId,
+      note_parentId: null,
+      isDelete: false,
+    })
+      .skip(skip) // skip là bỏ qua bao nhiêu note
+      .limit(limit); //giới hạn số lượng note lấy về
+
+    if (!notesFound || notesFound.length === 0) {
+      throw new NotFoundError("Không tìm thấy note chính");
+    }
+
+    return {
+      data: notesFound,
+      total: notesFound.length, // Đếm tổng số lượng note chính
+    };
+  };
+
+  static layNhungNoteGocAdmin = async ({ page }) => {
+    const notesFound = await NoteModel.find({
+      note_parentId: null,
+      isDelete: false,
+    })
+      .skip((page - 1) * 10) // Phân trang giả sử ở trang 1(page = 1)=> skip(0), ở trang 2(page = 2) => skip(10), skip là bỏ qua bao nhiêu note
+      .limit(20); //giới hạn số note trong 1 trang
+
+    if (!notesFound || notesFound.length === 0) {
+      throw new NotFoundError("Không tìm thấy note chính");
+    }
+
+    return {
+      data: notesFound,
+      total: notesFound.length, // Đếm tổng số lượng note chính
+    };
   };
 
   // Hàm lấy ra các note thông qua title, dùng để search
@@ -164,7 +209,7 @@ class NoteService {
     //update note due_date
     noteFound.due_date = calculateDueDate(note_level);
 
-    noteFound.save(); //Cập nhật lại dữ liệu note
+    return noteFound.save(); //Cập nhật lại dữ liệu note
   }
 
   // Hàm lấy các note cần ôn tập của ngày hôm đó, bằng cách lấy ra các note ít hơn hoặc bằng ngày hiện tại
@@ -177,7 +222,7 @@ class NoteService {
       note_userId: note_userId,
 
       note_parentId: note_parentId,
-      due_date: { $lte: today }, // So sánh chỉ phần ngày
+      due_date: { $lte: today }, // So sánh chỉ lấy tgian ít hơn hoặc bằng tgian hiện tại
       isDelete: false,
     });
 
@@ -292,6 +337,83 @@ class NoteService {
     }
     return dueDate;
   }
+
+  /**
+  Lấy ra số thẻ ôn tập trong tháng
+   app.get('/notes/:year/:month', async (req, res) => {
+  const { year, month } = req.params;
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  try {
+    // Truy vấn tất cả các note trong tháng cụ thể
+    const notes = await Note.find({
+      last_preview_date: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    });
+
+    // Tạo một mảng với 31 phần tử (tối đa số ngày trong một tháng)
+    let notesByDay = Array.from({ length: endDate.getDate() }, () => []);
+    // khi trả về cho client chỉ cần 
+    // Phân loại note theo ngày notesByDay[index].length là lấy dc số thẻ ôn trong ngày
+    notes.forEach(note => {
+      const day = note.last_preview_date.getDate();
+      notesByDay[day - 1].push(note); // Lưu note vào mảng tương ứng với ngày
+    });
+
+    res.json(notesByDay);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+   */
+
+  /**
+ 
+// Helper function để xác định ngày bắt đầu và kết thúc của tuần hiện tại
+const getStartAndEndOfWeek = () => {
+  const now = new Date();
+  const firstDayOfWeek = now.getDate() - now.getDay() + 1; // Lấy ngày bắt đầu tuần (thứ 2)
+  const startOfWeek = new Date(now.setDate(firstDayOfWeek));
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6); // Thêm 6 ngày để có ngày cuối tuần (chủ nhật)
+  return { startOfWeek, endOfWeek };
+};
+
+app.get('/notes/week/current', async (req, res) => {
+  const { startOfWeek, endOfWeek } = getStartAndEndOfWeek();
+
+  try {
+    // Truy vấn tất cả các note trong tuần hiện tại
+    const notes = await Note.find({
+      last_preview_date: {
+        $gte: startOfWeek,
+        $lt: endOfWeek
+      }
+    });
+
+    // Tạo một mảng với 7 phần tử (tương ứng với 7 ngày trong tuần)
+    let notesByDay = Array.from({ length: 7 }, () => []);
+
+    // Phân loại note theo ngày
+    notes.forEach(note => {
+      const day = (new Date(note.last_preview_date)).getDay(); // Lấy ngày trong tuần (0: Chủ nhật, 1: Thứ 2, ...)
+      notesByDay[day === 0 ? 6 : day - 1].push(note); // Đưa Chủ nhật vào cuối mảng, các ngày khác trừ 1 để tương ứng với mảng 0-based
+    });
+
+    const totalNotes = notes.reduce((total, note) => total + note.length, 0);
+    return {
+      data
+      total: totalNotes,
+    }
+    res.json({ notesByDay });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+ */
 }
 
 module.exports = NoteService;

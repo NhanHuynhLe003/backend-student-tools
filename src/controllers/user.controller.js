@@ -16,6 +16,32 @@ class UserController {
       metadata: await UserService.getStudentBooksReaded(req.params),
     }).send(res);
   };
+
+  updateUserInformation = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Cập nhật thông tin học sinh thành công !",
+      metadata: await UserService.updateUserInformation({
+        userId: req.params.userId,
+        payload: req.body,
+      }),
+    }).send(res);
+  };
+
+  getStudentInformation = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy thông tin học sinh thành công !",
+      metadata: await UserService.getStudentInformation({
+        userId: req.params.userId,
+      }),
+    }).send(res);
+  };
+
+  getAllStudentByAdmin = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách học sinh thành công !",
+      metadata: await UserService.getAllStudentByAdmin(),
+    }).send(res);
+  };
 }
 
 module.exports = new UserController();
