@@ -22,7 +22,7 @@ router.get(
 );
 router.post("/add", asyncHandleError(NoteController.addChildNote));
 router.get("/name", asyncHandleError(NoteController.getNoteByName));
-router.post("/level", asyncHandleError(NoteController.updateNoteLevel));
+router.put("/level/:id", asyncHandleError(NoteController.updateNoteLevel));
 router.get("/:id", asyncHandleError(NoteController.getNoteById));
 router.put("/:id", asyncHandleError(NoteController.updateNote));
 router.get("/user/:id", asyncHandleError(NoteController.getAllNotesByUser));

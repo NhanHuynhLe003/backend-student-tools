@@ -130,6 +130,15 @@ class BookController {
     }).send(res);
   };
 
+  getAllBookNotDeletedByAdmin = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách các quyển sách chưa bị xóa thành công",
+      metadata: await BookService.getAllBookNotDeletedByAdmin({
+        ...req.query,
+      }),
+    }).send(res);
+  };
+
   mergeFilterBook = async (req, res, next) => {
     new SuccessResponse({
       message: "Lọc sách theo điều kiện thành công",

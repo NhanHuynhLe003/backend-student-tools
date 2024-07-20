@@ -240,7 +240,7 @@ class BookService {
 
   static findBookByCategory = async ({ category_id }) => {
     await this.updateImageBookExpired();
-    console.log(`category_id::: ${category_id}`);
+
     return await findBookByCate({ category_id });
   };
 
@@ -263,11 +263,11 @@ class BookService {
     });
     // thêm sách vào thùng rác
 
-    await TrashModel.create({
-      admin_id: convertObjectId(userId),
-      book_id: convertObjectId(id),
-      desc: `Delete book with id: ${id} to trash bin`,
-    });
+    // await TrashModel.create({
+    //   admin_id: convertObjectId(userId),
+    //   book_id: convertObjectId(id),
+    //   desc: `Delete book with id: ${id} to trash bin`,
+    // });
 
     if (!res) throw new Error("Failed to delete book");
     return res;
@@ -302,6 +302,25 @@ class BookService {
   static getAllBookInStock = async ({ skip = 0, limit = 50 }) => {
     await this.updateImageBookExpired();
     return await getAllBookInStock({ skip, limit });
+  };
+
+  static getAllBookNotDeletedByAdmin = async ({
+    search = "",
+    skip = 0,
+    limit = 20,
+  }) => {
+    const res = await bookModel
+      .find({
+        book_isDelete: false,
+        book_name: { $regex: search, $options: "i" }, //option i: không phân biệt hoa thường
+      })
+      .skip(skip)
+      .limit(limit);
+
+    return {
+      result: res,
+      total: res.length,
+    };
   };
 
   static getBooksInStudentBookshelf = async ({
@@ -390,7 +409,11 @@ class BookService {
     markAppearance(cateQueryRes, "byCategory");
     markAppearance(instockQueryRes, "byInStockType");
 
-    console.log("APPEARANCE:::", appearanceMap);
+    console.log("APPEARANCE:::", appearanceMap, {
+      sortType,
+      categoryId,
+      instockType,
+    });
 
     // Chọn ra những sản phẩm xuất hiện trong cả ba danh sách
     const commonResults = Object.values(appearanceMap)

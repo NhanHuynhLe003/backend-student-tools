@@ -4,6 +4,16 @@ const UploadService = require("../services/upload.service");
 const { convertObjectId } = require("../utils");
 
 class UploadController {
+  checkAndGetImageS3ByStorageAndUserId = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách ảnh từ s3 thành công !",
+      metadata: await UploadService.checkAndGetImageS3ByStorageAndUserId({
+        nameStorage: req.query.nameStorage,
+        userId: req.params.userId,
+      }),
+    }).send(res);
+  };
+
   uploadSingleImgInfinity = async (req, res, next) => {
     const { file } = req;
 
@@ -16,6 +26,7 @@ class UploadController {
       metadata: await UploadService.uploadSingleImgInfinity({
         file,
         nameStorage: req.query.nameStorage,
+        userId: req.user.userId,
       }),
     }).send(res);
   };
@@ -60,6 +71,7 @@ class UploadController {
       metadata: await UploadService.uploadSingleDiskImgToS3({
         file,
         nameStorage: req.query.nameStorage,
+        userId: req.user.userId,
       }),
     }).send(res);
   };

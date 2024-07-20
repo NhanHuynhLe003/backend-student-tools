@@ -45,32 +45,19 @@ var studentSchema = new mongoose.Schema(
     },
     date_of_birth: {
       type: Date,
-      default: new Date(2000, 1, 1),
+      default: new Date(2003, 1, 1),
     },
-    // cvId: {
-    //   type: [
-    //     {
-    //       type: mongoose.Schema.Types.ObjectId,
-    //       ref: "CvStudent",
-    //     },
-    //   ],
-    // },
     portfolio_path: {
       type: String,
       default: "",
     },
     books_reading: {
-      // Chứa các id của sách mà student đang đọc
+      // Chứa các thông tin của sách mà student đang đọc
       type: [],
       default: [],
     },
     books_readed: {
-      // Chứa các id của sách mà student đã mượn (không kể đã đọc bao lâu)
-      type: [],
-      default: [],
-    },
-    books_rank: {
-      // Chứa các id của sách mà student đã đọc tối thiểu 1 tuần trở lên
+      // Chứa các thông tin của sách mà student đã mượn (không kể đã đọc bao lâu)
       type: [],
       default: [],
     },

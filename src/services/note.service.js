@@ -95,7 +95,6 @@ class NoteService {
   }) => {
     const notesFound = await NoteModel.find({
       note_userId: note_userId,
-      note_parentId: null,
       isDelete: false,
     })
       .skip(skip) // skip là bỏ qua bao nhiêu note
@@ -207,7 +206,7 @@ class NoteService {
 
     noteFound.note_level = note_level;
     //update note due_date
-    noteFound.due_date = calculateDueDate(note_level);
+    noteFound.due_date = this.calculateDueDate(note_level);
 
     return noteFound.save(); //Cập nhật lại dữ liệu note
   }
@@ -216,7 +215,7 @@ class NoteService {
   static layNhungNoteOntapHomNay = async ({ note_userId, note_parentId }) => {
     const today = new Date();
 
-    console.log("today: ", today);
+    console.log("LAY NGAY HOM NAY:::::::", today);
 
     const notesFound = await NoteModel.find({
       note_userId: note_userId,
@@ -226,9 +225,13 @@ class NoteService {
       isDelete: false,
     });
 
+    console.log("NOTE HOM NAY:::::::", notesFound);
+
     if (!notesFound || notesFound.length === 0) {
       throw new NotFoundError("Không có note cần ôn tập hôm nay");
     }
+
+    console.log("NOTE HOM NAY:::::::", notesFound);
 
     return notesFound;
   };
@@ -285,7 +288,7 @@ class NoteService {
     }
 
     noteFound.note_level = note_level;
-    noteFound.due_date = calculateDueDate(note_level);
+    noteFound.due_date = this.calculateDueDate(note_level);
 
     // Trả về ngày tiếp theo cho client
     await noteFound.save();
@@ -298,9 +301,6 @@ class NoteService {
     const today = new Date();
     let dueDate = new Date(today);
     switch (level) {
-      case 0:
-        dueDate.setMinutes(today.getMinutes() + 1);
-        break;
       case 1:
         dueDate.setDate(today.getDate() + 1);
         break;

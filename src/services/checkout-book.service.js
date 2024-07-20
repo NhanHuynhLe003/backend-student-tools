@@ -21,6 +21,7 @@ const {
 const BookService = require("./book.service");
 const { bookModel } = require("../models/book.model");
 const { default: mongoose } = require("mongoose");
+const { parse, formatISO, parseISO, isBefore } = require("date-fns");
 
 class CheckoutBookService {
   static async updateBookOrderToStudentStock({
@@ -430,6 +431,51 @@ class CheckoutBookService {
       .limit(limit)
       .sort({ createdOn: -1 })
       .populate("order_userId");
+
+    if (!orders || orders.length === 0) {
+      throw new NotFoundError("Không tìm thấy đơn hàng nào");
+    }
+
+    await Promise.all(
+      orders.map(async (order) => {
+        if (order.order_status === "indue") {
+          try {
+            const parsedDate = parse(
+              order.order_checkout.returnDate,
+              "dd/MM/yyyy",
+              new Date()
+            );
+            const returnDate = formatISO(parsedDate);
+            const currentDate = new Date().toISOString();
+
+            console.log("GET ALL ORDER BY ADMIN:::", {
+              returnDate,
+              currentDate,
+            });
+
+            if (isBefore(parseISO(returnDate), parseISO(currentDate))) {
+              console.log("Ngày trả sách ít hơn ngày hiện tại:::", {
+                returnDate,
+                currentDate,
+              });
+              order.order_status = "overdue";
+
+              // Cập nhật trạng thái sách đang đọc của học sinh là overdue
+              await this.updateBookOrderToStudentStock({
+                order: order,
+                book_status: "overdue",
+                mode: "update",
+              });
+
+              await order.save();
+            }
+          } catch (error) {
+            console.log("Error parsing date:::", error);
+            throw new BadRequestError("Ngày trả sách không hợp lệ");
+          }
+        }
+      })
+    );
 
     return orders;
   };

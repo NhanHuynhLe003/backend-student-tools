@@ -55,4 +55,9 @@ router.post(
   asyncHandleError(UploadController.uploadSingleImgInfinity)
 );
 
+router.get(
+  "/img/user/:userId",
+  asyncHandleError(UploadController.checkAndGetImageS3ByStorageAndUserId)
+);
+
 module.exports = router;

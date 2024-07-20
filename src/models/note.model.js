@@ -48,7 +48,7 @@ const noteSchema = new mongoose.Schema(
          10: 2 năm
          */
       type: Number,
-      default: 1,
+      default: 0,
     },
     //Lần ôn tập thẻ gần nhất, sử dụng để hiển thị bên trang biểu đồ
     // Dựa vào ngày để query theo tuần tháng, trả về mảng hiển thị biểu đồ phía client

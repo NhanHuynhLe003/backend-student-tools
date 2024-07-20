@@ -13,6 +13,11 @@ router.get(
   asyncHandleError(BookController.findBookByCategory)
 );
 
+router.get(
+  "/admin/all",
+  asyncHandleError(BookController.getAllBookNotDeletedByAdmin)
+);
+
 router.get("/publishs", asyncHandleError(BookController.findPublishBook));
 
 router.get("/recommends", asyncHandleError(BookController.getRecommendBooks));

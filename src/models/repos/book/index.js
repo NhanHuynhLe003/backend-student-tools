@@ -2,6 +2,7 @@ const { Types } = require("mongoose");
 const { bookModel } = require("../../book.model");
 const CategoryService = require("../../../services/category.service");
 const { checkValidQuantityBookInCart } = require("../cart");
+const CategoryModel = require("../../category.model");
 
 const deleteBookForeverById = async ({ book_id }) => {
   return await bookModel.findByIdAndDelete(book_id);
@@ -24,7 +25,7 @@ const getAllBookInStock = async ({ skip, limit }) => {
 const sortBookByNewest = async ({ skip, limit }) => {
   return await bookModel
     .find({ book_isDelete: false, isPublished: true })
-    .sort({ createdAt: -1 })
+    .sort({ updatedAt: -1 }) // sắp xếp theo thời gian tạo mới nhất
     .skip(skip)
     .limit(limit)
     .lean()
@@ -76,7 +77,25 @@ const findBookPublishDetail = async ({ book_id }) => {
     .lean()
     .exec();
 
-  return bookFound;
+  if (!bookFound) return null;
+  const categoryBookList = [];
+  const listBookGenreNew = bookFound.book_genre.map(async (cateId) => {
+    const category = await CategoryModel.findOne({ _id: cateId })
+      .lean()
+      .exec();
+    if (!category) return null;
+    return category;
+  });
+
+  // Chờ tất cả các promise trả về
+  await Promise.all(listBookGenreNew).then((res) => {
+    categoryBookList.push(...res);
+  });
+
+  return {
+    ...bookFound,
+    categoryBookList,
+  };
 };
 
 const findBookByCate = async ({ category_id }) => {

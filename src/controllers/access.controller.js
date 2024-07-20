@@ -36,7 +36,7 @@ class AccessController {
       message: "Logged In Successfully!",
       metadata: await AccessService.login(req.body),
     }).send(res);
-  };
+  }; // Sau khi xử lý xong thì trả về response cho user
 }
 
 module.exports = new AccessController();

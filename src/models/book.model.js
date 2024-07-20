@@ -45,9 +45,13 @@ let bookSchema = new mongoose.Schema(
       required: true,
     },
     book_genre: {
-      type: [mongoose.Schema.Types.ObjectId], // chứa các id của category collection
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Category",
+        },
+      ], // chứa các id của category collection
       required: true,
-      ref: "Category",
 
       // them loai san pham thi can phai them vao enum vd: Self-Help, Business, Fiction, Non-Fiction, etc
     },

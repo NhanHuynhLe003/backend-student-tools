@@ -6,6 +6,9 @@ const COLLECTION_NAME = "Images";
 
 const imageSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
     keyName: String,
     signedUrl: String,
     expiration: Date,

@@ -3,6 +3,7 @@ const {
   s3,
   GetObjectCommand,
   PutObjectCommand,
+  DeleteObjectCommand,
 } = require("../configs/config.s3");
 
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
@@ -18,7 +19,17 @@ const ImageModel = require("../models/image.model");
 const urlImgCloudFront = process.env.CLOUDFRONT_URL;
 
 class UploadService {
-  static async uploadSingleImgInfinity({ file, nameStorage = "books" }) {
+  static async uploadSingleImgInfinity({
+    userId,
+    file,
+    nameStorage = "books",
+  }) {
+    console.log("UPLOAD:::::;", {
+      userId,
+      file,
+      nameStorage,
+    });
+
     //tạo tên folder ngày hiện tại upload ảnh
     const convertDDMMYYYY = format(new Date(), "dd-MM-yyyy");
     //Thời gian để ảnh hết hạn
@@ -47,6 +58,15 @@ class UploadService {
       dateLessThan: expiredTimeUrlImg, // url img hết hạn sau 2h
       privateKey: process.env.CLOUDFRONT_PRIVATEKEY, // privatekey của user tạo bằng rsa
     });
+
+    const image = new ImageModel({
+      userId: userId,
+      keyName: imgName,
+      signedUrl: urlSignedCloudFront,
+      expiration: expiredTimeUrlImg,
+      storage: nameStorage,
+    });
+    await image.save();
 
     return {
       url: urlSignedCloudFront, // trả về thông tin ảnh, trong đó có url truy cập ảnh
@@ -96,12 +116,33 @@ class UploadService {
 
   //=========================================================================================
 
+  static async deleteImageS3ById({ imageId }) {
+    const imgFound = await ImageModel.findOne({ _id: imageId });
+    if (!imgFound)
+      throw new NotFoundError("Không tìm thấy ảnh trong hệ thống !");
+    const command = new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: imgFound.keyName,
+    });
+    const result = await s3.send(command);
+    const deleteRes = await imgFound.deleteOne();
+
+    return {
+      result,
+      deleteResponse: deleteRes,
+    };
+  }
+
   /**
    * @description Hàm xử lý ảnh lên S3 thông qua disk
    * @param {object} file - file ảnh cần upload, sử dụng multer để xử lý
    * @returns {object} - Trả về URL ảnh đã upload và kết quả upload lên S3
    */
-  static async uploadSingleDiskImgToS3({ file, nameStorage = "books" }) {
+  static async uploadSingleDiskImgToS3({
+    userId,
+    file,
+    nameStorage = "books",
+  }) {
     // Tạo tên folder ngày hiện tại upload ảnh
     const convertDDMMYYYY = format(new Date(), "dd-MM-yyyy");
     // Thời gian để ảnh hết hạn
@@ -138,6 +179,7 @@ class UploadService {
 
     //(*) lưu file ảnh vào mongodb => Mục đích: dùng để get ảnh khi ảnh hết hạn
     const image = new ImageModel({
+      userId: userId,
       keyName: imgName,
       signedUrl: urlSignedCloudFront,
       expiration: expiredTimeUrlImg,
@@ -336,6 +378,50 @@ class UploadService {
 
     // Chạy song song get tất cả ảnh trong database
     const checkedImages = await Promise.all(checkedImagesPromises);
+    return checkedImages.filter((img) => img !== null);
+  }
+
+  static async checkAndGetImageS3ByStorageAndUserId({ userId, nameStorage }) {
+    const images = await ImageModel.find({
+      storage: nameStorage,
+      userId: userId,
+    }).sort({ createdAt: -1 });
+    if (!images) throw NotFoundError("Không tìm thấy ảnh trong hệ thống !");
+
+    // Lấy ra thời gian hiện tại để so sánh với thời gian ảnh trong database
+    const currentTime = new Date();
+
+    // Kiểm tra từng image trong database rồi update lại signedUrl và expiration
+
+    const checkedImagesPromises = images.map(async (image) => {
+      // Nếu thời gian sử dụng ảnh vẫn còn => trả về null vì sẽ ko cập nhật ảnh đó
+      if (image.expiration > currentTime) {
+        return image;
+      }
+
+      // Xử lý khi thời gian ảnh hết hạn => ký chữ ký mới cho ảnh
+      const ImgCloudFrontUrl = `${urlImgCloudFront}/${image.keyName}`;
+      const expiredTimeUrlImg = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      // Ký chữ ký mới cho ảnh
+      const urlSignedCloudFront = getSignedUrlCloudFront({
+        url: ImgCloudFrontUrl,
+        keyPairId: process.env.CLOUDFRONT_PUBLICKEY,
+        dateLessThan: expiredTimeUrlImg,
+        privateKey: process.env.CLOUDFRONT_PRIVATEKEY,
+      });
+
+      // Lưu lại URL ảnh đã ký mới vào database
+      image.signedUrl = urlSignedCloudFront;
+      image.expiration = expiredTimeUrlImg;
+      await image.save();
+
+      return image;
+    });
+
+    // Chạy song song get tất cả ảnh trong database
+    const checkedImages = await Promise.all(checkedImagesPromises);
+
     return checkedImages.filter((img) => img !== null);
   }
 }
