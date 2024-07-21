@@ -6,7 +6,10 @@ const COLLECTION_NAME = "Cv";
 
 const CvSchema = new Schema(
   {
-    cvUserId: mongoose.Schema.Types.ObjectId,
+    cvUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+    },
     cvParentUserId: mongoose.Schema.Types.ObjectId,
     cvParentId: mongoose.Schema.Types.ObjectId,
     title: String,

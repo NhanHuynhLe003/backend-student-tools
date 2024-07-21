@@ -90,6 +90,7 @@ class NoteService {
 
   static layNhungNoteGocUser = async ({
     note_userId,
+    search = "",
     skip = 0,
     limit = 20,
   }) => {
@@ -97,6 +98,7 @@ class NoteService {
       note_userId: note_userId,
       isDelete: false,
     })
+      .regex("note_title", new RegExp(search, "i")) // Tìm kiếm theo title, i là không phân biệt hoa thường
       .skip(skip) // skip là bỏ qua bao nhiêu note
       .limit(limit); //giới hạn số lượng note lấy về
 
@@ -152,7 +154,12 @@ class NoteService {
 
   // Hàm xóa note
   static deleteNote = async ({ note_userId, id }) => {
+    console.log("ID DELETE NOTE:::::::", {
+      note_userId,
+      id,
+    });
     const noteFound = await NoteModel.findOne({
+      _id: id,
       note_userId: note_userId,
     });
 
@@ -160,8 +167,19 @@ class NoteService {
       throw new NotFoundError("Không tìm thấy note");
     }
 
-    const deleteCloze = await NoteModel.findByIdAndDelete(id);
-    return deleteCloze;
+    noteFound.isDelete = true;
+
+    await noteFound.save();
+    return;
+  };
+
+  static getNotesDeletedByUser = async ({ note_userId }) => {
+    const notesFound = await NoteModel.find({
+      note_userId: note_userId,
+      isDelete: true,
+    });
+
+    return notesFound;
   };
 
   //Hàm chỉnh sửa note như nội dung bên trong
@@ -234,21 +252,6 @@ class NoteService {
     console.log("NOTE HOM NAY:::::::", notesFound);
 
     return notesFound;
-  };
-
-  // Hàm xóa note
-  static deleteNote = async ({ note_userId, id }) => {
-    const noteFound = await NoteModel.findOne({
-      note_userId,
-      _id: id,
-    });
-
-    if (!noteFound) {
-      throw new NotFoundError("Không tìm thấy note");
-    }
-
-    const deleteCloze = await NoteModel.findByIdAndDelete(id);
-    return deleteCloze;
   };
 
   // Hàm chỉnh sửa note như nội dung bên trong

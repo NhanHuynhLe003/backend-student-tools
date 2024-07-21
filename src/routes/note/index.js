@@ -20,11 +20,16 @@ router.get(
   "/today/:note_userId",
   asyncHandleError(NoteController.layNhungNoteOntapHomNay)
 );
+router.get(
+  "/deleted/:userId",
+  asyncHandleError(NoteController.getNotesDeletedByUser)
+);
 router.post("/add", asyncHandleError(NoteController.addChildNote));
 router.get("/name", asyncHandleError(NoteController.getNoteByName));
 router.put("/level/:id", asyncHandleError(NoteController.updateNoteLevel));
 router.get("/:id", asyncHandleError(NoteController.getNoteById));
 router.put("/:id", asyncHandleError(NoteController.updateNote));
+router.delete("/:id", asyncHandleError(NoteController.deleteNote));
 router.get("/user/:id", asyncHandleError(NoteController.getAllNotesByUser));
 
 //GET, POST, PUT, PATCH, DELETE ->

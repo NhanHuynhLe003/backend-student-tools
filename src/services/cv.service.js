@@ -3,6 +3,7 @@
 const CvModel = require("../models/cv.model");
 const cvStudentModel = require("../models/cvStudent.model");
 const studentModel = require("../models/student.model");
+const { NotFoundError } = require("../../core/error.response");
 
 class CvService {
   static getImgsByUserId = async ({ userId }) => {};
@@ -34,8 +35,10 @@ class CvService {
   static addBoardIntoCv = async (payload) => {
     const { cvId, userId } = payload;
 
+    console.log("CvId:::", cvId, "userId:::", userId);
+
     const foundCv = await CvModel.findOne({ _id: cvId, cvUserId: userId });
-    if (!foundCv) throw new Error("Không tìm thấy cv !");
+    if (!foundCv) throw new NotFoundError("Không tìm thấy cv !");
 
     // Lấy số lượng tính khoảng cách mới giữa các bảng
     const boardCvLen = foundCv.boards.length;
@@ -60,7 +63,7 @@ class CvService {
     const { cvId, userId, boardId, item } = payload;
 
     const foundCv = await CvModel.findOne({ _id: cvId, cvUserId: userId });
-    if (!foundCv) throw new Error("Không tìm thấy cv !");
+    if (!foundCv) throw new NotFoundError("Không tìm thấy cv !");
 
     const foundBoard = foundCv.boards.find((board) => {
       console.log("board._id", board._id.toString(), boardId.toString());
@@ -68,7 +71,7 @@ class CvService {
     });
 
     console.log("Found board", foundBoard, boardId);
-    if (!foundBoard) throw new Error("Không tìm thấy board !");
+    if (!foundBoard) throw new NotFoundError("Không tìm thấy board !");
 
     foundBoard.listDataItem.push(item);
     await foundCv.save({ upsert: true, new: true });
@@ -135,6 +138,7 @@ class CvService {
   static getAllCvsByAdmin = async ({ skip = 0, limit = 20 }) => {
     const total = await CvModel.countDocuments({ isDelete: false }).exec();
     const res = await CvModel.find({ isDelete: false })
+      .populate("cvUserId")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -154,7 +158,7 @@ class CvService {
     const students = await studentModel.find({ classStudent: studentClass });
 
     if (!students || students.length === 0) {
-      throw new Error("Không tìm thấy lớp học!");
+      throw new NotFoundError("Không tìm thấy lớp học!");
     }
 
     // 2. Tạo CV mới cho từng học sinh với cvData

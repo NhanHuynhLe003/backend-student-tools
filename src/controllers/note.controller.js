@@ -54,7 +54,26 @@ class NoteController {
   deleteNote = async (req, res, next) => {
     new SuccessResponse({
       message: "Xóa Sách Thành Công",
-      metadata: await NoteService.deleteNote(req.params),
+      metadata: await NoteService.deleteNote({
+        id: req.params.id,
+        note_userId: req.query.note_userId,
+      }),
+    }).send(res);
+  };
+
+  getNotesDeletedByUser = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy Sách Đã Xóa Thành Công",
+      metadata: await NoteService.getNotesDeletedByUser({
+        note_userId: req.params.userId,
+      }),
+    }).send(res);
+  };
+
+  getNotesDeletedByUser = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy Sách Đã Xóa Thành Công",
+      metadata: await NoteService.getNotesDeletedByUser(req.params),
     }).send(res);
   };
 
