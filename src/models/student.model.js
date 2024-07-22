@@ -19,7 +19,7 @@ var studentSchema = new mongoose.Schema(
     student_id: {
       type: String,
       // required: true,
-      // unique: true, // Mã sinh viên là duy nhất vd: 0308211150
+      unique: true, // Mã sinh viên là duy nhất vd: 0308211150
     },
     classStudent: {
       type: String,

@@ -11,6 +11,10 @@ router.use(authentication);
 
 router.get("/admin/all", asyncHandleError(userController.getAllStudentByAdmin));
 router.get(
+  "/rank-student-readed-books",
+  asyncHandleError(userController.listRankStudentReadedBooks)
+);
+router.get(
   "/books-reading/:userId",
   asyncHandleError(userController.getStudentBooksReading)
 );

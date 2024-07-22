@@ -8,6 +8,10 @@ const { authentication } = require("../../auth/auth-util");
 //các url bên dưới authentication đều phải xác thực mới được truy cập
 router.use(authentication);
 
+router.post("/restore/:id", asyncHandleError(NoteController.handleRestoreNote));
+
+router.delete("/delete/:id", asyncHandleError(NoteController.handleDeleteNote));
+
 router.get(
   "/origin/:userId",
   asyncHandleError(NoteController.layNhungNoteGocUser)
@@ -26,6 +30,7 @@ router.get(
 );
 router.post("/add", asyncHandleError(NoteController.addChildNote));
 router.get("/name", asyncHandleError(NoteController.getNoteByName));
+router.get("/admin/all", asyncHandleError(NoteController.layNhungNoteGocAdmin));
 router.put("/level/:id", asyncHandleError(NoteController.updateNoteLevel));
 router.get("/:id", asyncHandleError(NoteController.getNoteById));
 router.put("/:id", asyncHandleError(NoteController.updateNote));

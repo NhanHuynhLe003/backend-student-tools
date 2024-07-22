@@ -64,6 +64,37 @@ class UserService {
       result: students,
     };
   }
+
+  static async listRankStudentReadedBooks({ skip = 0, limit = 5 }) {
+    return await studentModel
+      .aggregate([
+        {
+          $match: {
+            books_readed: { $exists: true, $not: { $size: 0 } },
+          },
+        },
+        {
+          $addFields: {
+            books_readed_length: { $size: "$books_readed" },
+          },
+        },
+        {
+          $sort: { books_readed_length: -1 },
+        },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: limit,
+        },
+        {
+          $project: {
+            books_readed_length: 0, // Loại bỏ trường books_readed_length khỏi kết quả cuối cùng
+          },
+        },
+      ])
+      .exec();
+  }
 }
 
 module.exports = UserService;

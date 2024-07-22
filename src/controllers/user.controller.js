@@ -42,6 +42,13 @@ class UserController {
       metadata: await UserService.getAllStudentByAdmin(),
     }).send(res);
   };
+
+  listRankStudentReadedBooks = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách học sinh đọc sách nhiều nhất thành công !",
+      metadata: await UserService.listRankStudentReadedBooks({ ...req.query }),
+    }).send(res);
+  };
 }
 
 module.exports = new UserController();

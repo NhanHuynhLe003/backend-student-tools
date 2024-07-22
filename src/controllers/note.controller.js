@@ -41,12 +41,19 @@ class NoteController {
     }).send(res);
   };
 
+  layNhungNoteGocAdmin = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy Tòan Bộ Note Gốc Thành Công",
+      metadata: await NoteService.layNhungNoteGocAdmin(req.query),
+    }).send(res);
+  };
+
   updateNote = async (req, res, next) => {
     new SuccessResponse({
       message: "Cập Nhật Sách Thành Công",
       metadata: await NoteService.updateNote({
-        ...req.body,
-        ...req.params,
+        id: req.params.id,
+        payload: req.body,
       }),
     }).send(res);
   };
@@ -73,7 +80,9 @@ class NoteController {
   getNotesDeletedByUser = async (req, res, next) => {
     new SuccessResponse({
       message: "Lấy Sách Đã Xóa Thành Công",
-      metadata: await NoteService.getNotesDeletedByUser(req.params),
+      metadata: await NoteService.getNotesDeletedByUser({
+        userId: req.params.userId,
+      }),
     }).send(res);
   };
 
@@ -102,6 +111,26 @@ class NoteController {
       metadata: await NoteService.layNhungNoteGocUser({
         note_userId: req.params.userId,
         ...req.query,
+      }),
+    }).send(res);
+  };
+
+  handleRestoreNote = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Khôi Phục Note Thành Công",
+      metadata: await NoteService.handleRestoreNote({
+        id: req.params.id,
+        note_userId: req.query.userId,
+      }),
+    }).send(res);
+  };
+
+  handleDeleteNote = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Xóa Note Thành Công",
+      metadata: await NoteService.handleDeleteNote({
+        id: req.params.id,
+        note_userId: req.query.userId,
       }),
     }).send(res);
   };

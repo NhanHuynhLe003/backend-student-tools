@@ -8,6 +8,7 @@ const noteSchema = new mongoose.Schema(
   {
     note_userId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
       required: true, //Yêu cầu phải có khi khởi tạo
     },
     note_title: {

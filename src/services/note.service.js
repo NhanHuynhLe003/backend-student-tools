@@ -22,6 +22,7 @@ class NoteService {
     note_level,
     clozes = [],
   }) => {
+    // Tạo note mới
     const newNote = await NoteModel.create({
       note_userId: note_userId,
       note_title: note_title,
@@ -62,10 +63,9 @@ class NoteService {
   };
 
   //Hàm lấy ra note thông qua id, chi tiết note
-  static getNoteById = async ({ note_userId, id }) => {
+  static getNoteById = async ({ id }) => {
     //Tìm Note bằng ObjectID
     const noteFound = await NoteModel.findOne({
-      note_userId: note_userId,
       _id: id,
     });
 
@@ -88,11 +88,12 @@ class NoteService {
     return checkNoteUser;
   };
 
+  // Hàm lấy ra các note gốc của user
   static layNhungNoteGocUser = async ({
     note_userId,
-    search = "",
-    skip = 0,
-    limit = 20,
+    search = "", // nội dung tìm kiếm
+    skip = 0, // bỏ qua bao nhiêu note
+    limit = 20, // giới hạn số lượng note lấy về
   }) => {
     const notesFound = await NoteModel.find({
       note_userId: note_userId,
@@ -107,26 +108,47 @@ class NoteService {
     }
 
     return {
-      data: notesFound,
+      data: notesFound, // Dữ liệu trả về
       total: notesFound.length, // Đếm tổng số lượng note chính
     };
   };
 
-  static layNhungNoteGocAdmin = async ({ page }) => {
-    const notesFound = await NoteModel.find({
-      note_parentId: null,
-      isDelete: false,
-    })
-      .skip((page - 1) * 10) // Phân trang giả sử ở trang 1(page = 1)=> skip(0), ở trang 2(page = 2) => skip(10), skip là bỏ qua bao nhiêu note
-      .limit(20); //giới hạn số note trong 1 trang
+  // Hàm lấy ra các note gốc của Admin
+  static layNhungNoteGocAdmin = async ({ page, search }) => {
+    // Tạo regex để tìm kiếm không phân biệt hoa thường
+    const searchRegex = new RegExp(search, "i");
 
-    if (!notesFound || notesFound.length === 0) {
+    const notesFound = await NoteModel.find({
+      note_parentId: null, // Note_parentId chỉ có note con mới có note_parentId, note gốc sẽ không có note_parentId
+      isDelete: false, // lấy ~ note chưa bị xóa
+
+      // Tìm kiếm theo điều kiện
+      $or: [
+        { note_title: { $regex: searchRegex } }, // Tìm kiếm theo tiêu đề
+        { note_userId: { $exists: true } }, // Chỉ những note có note_userId
+      ],
+    })
+      .populate("note_userId", "name email student_id classStudent") // Lấy ra thông tin user theo userId
+      .skip(page * 5) // Phân trang
+      .limit(5); // Giới hạn số note trong 1 trang
+
+    // Lọc ra những note có `note_userId` phù hợp hoặc tiêu đề phù hợp
+    const filteredNotes = notesFound.filter((note) => {
+      return (
+        note.note_title.match(searchRegex) ||
+        (note.note_userId && // kiểm tra note_userId có tồn tại trong note không?
+          note.note_userId.name &&
+          note.note_userId.name.match(searchRegex)) //Name user có khớp với nội dung tìm kiếm
+      );
+    });
+
+    if (filteredNotes.length === 0) {
       throw new NotFoundError("Không tìm thấy note chính");
     }
 
     return {
-      data: notesFound,
-      total: notesFound.length, // Đếm tổng số lượng note chính
+      data: filteredNotes,
+      total: filteredNotes.length, // Đếm tổng số lượng note chính
     };
   };
 
@@ -173,9 +195,9 @@ class NoteService {
     return;
   };
 
-  static getNotesDeletedByUser = async ({ note_userId }) => {
+  static getNotesDeletedByUser = async ({ userId }) => {
     const notesFound = await NoteModel.find({
-      note_userId: note_userId,
+      note_userId: userId,
       isDelete: true,
     });
 
@@ -183,15 +205,8 @@ class NoteService {
   };
 
   //Hàm chỉnh sửa note như nội dung bên trong
-  static async uploadNote({ note_userId, id, payload = {} }) {
-    const noteFound = await NoteModel.findOne({
-      note_userId: note_userId,
-      _id: id,
-    });
-
-    if (!noteFound) {
-      throw new NotFoundError("Không tìm thấy note");
-    }
+  static async updateNote({ id, payload = {} }) {
+    console.log("UPDATE NOTE PAYLOAD:::::::", id, payload);
 
     //1. Xóa đi giá trị undefined, null trong object payload
     const objectParamas = removeUndefinedNullObject(payload);
@@ -254,30 +269,28 @@ class NoteService {
     return notesFound;
   };
 
-  // Hàm chỉnh sửa note như nội dung bên trong
-  static async updateNote({ note_userId, id, payload = {} }) {
-    const noteFound = await NoteModel.findOne({
-      note_userId,
-      _id: id,
-    });
-
-    if (!noteFound) {
-      throw new NotFoundError("Không tìm thấy note");
-    }
-
-    const objectParams = removeUndefinedNullObject(payload);
-    const convertParamsObj = nestedObjectConvert(objectParams);
-
-    const updatedNote = await NoteModel.findByIdAndUpdate(
-      id,
-      convertParamsObj,
+  static handleRestoreNote = async ({ note_userId, id }) => {
+    const noteFound = await NoteModel.findOneAndUpdate(
       {
-        new: true,
+        note_userId: note_userId,
+        _id: id,
+      },
+      {
+        isDelete: false, //Khôi phục note
       }
     );
 
-    return updatedNote;
-  }
+    return noteFound;
+  };
+
+  static handleDeleteNote = async ({ note_userId, id }) => {
+    const noteFound = await NoteModel.findOneAndDelete({
+      note_userId: note_userId,
+      _id: id,
+    });
+
+    return noteFound;
+  };
 
   // Hàm cập nhật level tiếp theo của note khi nhấn nút: như giảm level hay level tiếp theo
   static async updateNoteLevel({ note_userId, id, note_level }) {

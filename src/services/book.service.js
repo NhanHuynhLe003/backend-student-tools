@@ -199,7 +199,9 @@ class BookService {
   };
 
   static findBookPublishDetail = async ({ id }) => {
+    //Update anh sách nếu hết hạn
     await this.updateImageBookExpired();
+
     const res = await findBookPublishDetail({ book_id: id });
     if (!res) throw new NotFoundError("not found");
     return res;
@@ -212,6 +214,7 @@ class BookService {
     if (!res) throw new NotFoundError("not found");
     return res;
   };
+
   static findPublishBook = async ({ skip = 0, limit = 50 }) => {
     await this.updateImageBookExpired();
     const query = { isPublished: true, book_isDelete: false };
@@ -222,11 +225,12 @@ class BookService {
 
     return res;
   };
+
   static findBookByText = async (textSearch) => {
     // console.log("Text-Search::: ", textSearch);
     await this.updateImageBookExpired();
     const res = await findBookByText(textSearch);
-    if (!res) throw new NotFoundError("not found");
+
     return res;
   };
 

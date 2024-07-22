@@ -80,6 +80,7 @@ const findBookPublishDetail = async ({ book_id }) => {
   if (!bookFound) return null;
   const categoryBookList = [];
   const listBookGenreNew = bookFound.book_genre.map(async (cateId) => {
+    // Tìm kiếm danh mục theo id của sách
     const category = await CategoryModel.findOne({ _id: cateId })
       .lean()
       .exec();
