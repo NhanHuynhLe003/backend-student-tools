@@ -351,6 +351,14 @@ class BookService {
     let cateQueryRes = [];
     let instockQueryRes = [];
 
+    if (search) {
+      const searchsResult = await BookService.findBookByText(search);
+      return {
+        result: searchsResult,
+        total: searchsResult.length,
+      };
+    }
+
     // sắp xếp sách
     switch (sortType) {
       case "read":
@@ -412,12 +420,6 @@ class BookService {
     markAppearance(sortQueryRes, "bySortType");
     markAppearance(cateQueryRes, "byCategory");
     markAppearance(instockQueryRes, "byInStockType");
-
-    console.log("APPEARANCE:::", appearanceMap, {
-      sortType,
-      categoryId,
-      instockType,
-    });
 
     // Chọn ra những sản phẩm xuất hiện trong cả ba danh sách
     const commonResults = Object.values(appearanceMap)

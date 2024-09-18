@@ -8,8 +8,9 @@ router.use(apiKey);
 //check permission
 router.use(checkPermission("0000"));
 
+router.use("/v1/api/comment", require("./comment"));
+router.use("/v1/api/email", require("./email"));
 router.use("/v1/api/cv", require("./cv"));
-router.use("/v1/api/note", require("./note"));
 router.use("/v1/api/upload", require("./upload"));
 router.use("/v1/api/checkout", require("./checkout"));
 router.use("/v1/api/cart", require("./cart"));
