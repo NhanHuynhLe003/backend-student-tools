@@ -109,6 +109,18 @@ function deleteFilesInDirectory(directory) {
   });
 }
 
+function customRound(num) {
+  const decimal = num % 1;
+
+  if (decimal <= 0.25) {
+    return Math.floor(num); // Làm tròn xuống
+  } else if (decimal > 0.25 && decimal < 0.75) {
+    return Math.floor(num) + 0.5; // Làm tròn lên giữa
+  } else {
+    return Math.ceil(num); // Làm tròn lên
+  }
+}
+
 module.exports = {
   getDataInfoResponse,
   removeUndefinedNullObject,
@@ -117,4 +129,5 @@ module.exports = {
   convertDateToDDMMYYYY,
   isObjectEmpty,
   deleteFilesInDirectory,
+  customRound,
 };

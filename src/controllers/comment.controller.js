@@ -27,7 +27,17 @@ class CommentController {
   deleteComment = async (req, res, next) => {
     new Created({
       message: "Xóa Comment thành công!",
-      metadata: await CommentService.deleteComment(req.params.id),
+      metadata: await CommentService.deleteComment({
+        commentId: req.params.id,
+        bookId: req.query.bookId,
+      }),
+    }).send(res);
+  };
+
+  getStarsRating = async (req, res, next) => {
+    new SuccessResponse({
+      message: "Lấy danh sách đánh giá thành công!",
+      metadata: await CommentService.getStarsRating(req.query),
     }).send(res);
   };
 }

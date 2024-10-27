@@ -252,7 +252,7 @@ class CheckoutBookService {
         book.book_orderId.toString() === orderId.toString() &&
         book.book_data.bookId.toString() === bookId.toString() &&
         book._id.toString() === idBookReading.toString() &&
-        book.book_status === "indue"
+        book.book_status !== "pending"
     );
 
     if (bookIndex === -1)

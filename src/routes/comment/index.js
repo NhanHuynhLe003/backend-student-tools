@@ -5,6 +5,7 @@ const { asyncHandleError } = require("../../auth/check-auth");
 const { authentication } = require("../../auth/auth-util");
 
 router.get("", asyncHandleError(CommentController.getCommentInBook));
+router.get("/ratings", asyncHandleError(CommentController.getStarsRating));
 
 router.use(authentication);
 
